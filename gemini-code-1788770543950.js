@@ -1,6 +1,6 @@
 const CONFIG = {
   // GoogleフォームのURL
-  formUrl: "ここにコピーしたGoogleフォームのURLを貼り付け",
+  formUrl: "https://forms.gle/cqTQUZa9BE3dYccM6",
   
   // サイトタイトル
   siteTitle: "歴史風景マップ"

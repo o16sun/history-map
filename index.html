@@ -1,6 +1,14 @@
 歴史風景マップ
-  
-  
 
 
-5. 貼り付けたら、画面右上にある緑色の **「Commit changes...」** ボタンを押し、出てきたポップアップでもう一度緑色のボタンを押して保存します。
+
+
+
+
+
+
+var map = L.map('map').setView([35.6812, 139.7671], 6);
+
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+L.marker([35.6852, 139.7528]).addTo(map).bindPopup('歴史風景マップ（江戸城跡）');

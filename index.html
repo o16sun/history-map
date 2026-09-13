@@ -16,3 +16,21 @@ html, body, #map { margin: 0; padding: 0; width: 100%; height: 100%; }
 <script＞
 document.addEventListener("DOMContentLoaded", function() {
 var map = L.map("map").setView([35.6812, 139.7671], 6);
+if (row.lat && row.lng) {
+          var lat = parseFloat(row.lat);
+          var lng = parseFloat(row.lng);
+          
+          var popupContent = "小なりb大なり" + (row.name || "") + "小なり/b大なり小なりbr大なり" + (row.description || "");
+          if (row.image && row.image.trim() !== "") {
+            popupContent += "小なりbr大なり小なりimg src='" + row.image.trim() + "' class='popup-img'大なり";
+          }
+
+          L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+        }
+      });
+    }
+  });
+});
+</script>
+</body>
+</html>

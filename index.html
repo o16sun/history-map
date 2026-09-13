@@ -1,18 +1,18 @@
-＜!DOCTYPE html＞
-＜html lang="ja"＞
-＜head＞
-＜meta charset="UTF-8"＞
-＜title＞歴史風景マップ＜/title＞
-＜link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" /＞
-＜style＞
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>歴史風景マップ</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
 html, body, #map { margin: 0; padding: 0; width: 100%; height: 100%; }
 .popup-img { width: 100%; max-width: 200px; height: auto; margin-top: 8px; border-radius: 4px; }
-＜/style＞
-＜script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"＞＜/script＞
-＜/head＞
-＜body＞
-＜div id="map"＞＜/div＞
-＜script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"＞＜/script＞
-＜script＞
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+<div id="map"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"大なり小なり/script大なり
+<script大なり
 document.addEventListener("DOMContentLoaded", function() {
 var map = L.map("map").setView([35.6812, 139.7671], 6);

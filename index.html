@@ -17,7 +17,8 @@ html, body, #map { margin: 0; padding: 0; width: 100%; height: 100%; }
 document.addEventListener("DOMContentLoaded", function() {
 var map = L.map("map").setView([35.6812, 139.7671], 6);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: '© OpenStreetMap contributors'}).addTo(map);
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
 var csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0Sq52Je9MzQBpIZhIUtoZPxrIxZFdKecHHVErWUZ3Xqq4KUbMpgLsPg2SJRAGF_8e2rJxAqrLvm5b/pub?output=csv";
 Papa.parse(csvUrl, {
   download: true,

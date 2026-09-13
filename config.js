@@ -1,4 +1,4 @@
 const CONFIG = {
-  formUrl: "https://forms.google.com",
+  formUrl: "",
   siteTitle: "歴史風景マップ"
 };

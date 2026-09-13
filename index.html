@@ -30,7 +30,7 @@ if (row.lat && row.lng) {
           
           var popupContent = "<b>" + (row.name || "") + "</b><br>" + (row.description || "");
           if (row.image && row.image.trim() !== "") {
-            popupContent += "<br><img src='" + row.image.trim() + "' class='popup-img'";
+            popupContent += "<br><img src='" + row.image.trim() + "' class='popup-img'>";
           }
 
           L.marker([lat, lng]).addTo(map).bindPopup(popupContent);

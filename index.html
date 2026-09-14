@@ -23,8 +23,10 @@
             download: true,
             header: true,
             complete: function(results) {
+                console.log("読み込んだデータ:", results.data);
                 results.data.forEach(function(row) {
                     var coordStr = row["住所または座標"];
+                    console.log("処理中の行:", row["場所の名称"], coordStr);
                     if (coordStr && coordStr.includes(",")) {
                         var parts = coordStr.split(",");
                         var lat = parseFloat(parts[0].trim());

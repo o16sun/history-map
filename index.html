@@ -30,10 +30,10 @@ var parts = coordStr.split(",");
 var lat = parseFloat(parts[0].trim());
 var lng = parseFloat(parts[1].trim());
 if (!isNaN(lat) && !isNaN(lng)) {
-var title = row["場所の名称"] || "";
-var era = row["時代・年"] || "";
-var desc = row["説明・歴史"] || "";
-var popupContent = "" + title + " (" + era + ")
+    var title = row["場所の名称"] || "";
+    var era = row["時代・年"] || "";
+    var desc = row["説明・歴史"] || "";
+    var popupContent = "**" + title + "** (" + era + ")
 
 " + desc;
 var imgUrl = row["画像URL"];

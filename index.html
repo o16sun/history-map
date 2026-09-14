@@ -33,7 +33,7 @@ if (!isNaN(lat) && !isNaN(lng)) {
     var title = row["場所の名称"] || "";
     var era = row["時代・年"] || "";
     var desc = row["説明・歴史"] || "";
-    var popupContent = "" + title + " (" + era + ")
+    var popupContent = "**" + title + "** (" + era + ")
 
 " + desc;
 var imgUrl = row["画像URL"];
@@ -42,7 +42,9 @@ popupContent += "
 
 ";
 }
-});
+L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+}
+```
 }
 });
         });

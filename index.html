@@ -14,42 +14,36 @@
     <div id="map"></div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        var map = L.map("map").setView([35.6812, 139.7671], 6);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+        var map = L.map('map').setView([35.6812, 139.7671], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        var csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0Sq52Je9MzQbPIzhiUtoZPxriXZFdKecHHKVwUZ3Xqq4KubMpLSpG25JRAGF_8c2rJXaqrLVn5b/pub?output=csv";
+        var csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0Sq52Je9MzQbPizhiUtoZPxrIxZFdKeCHKVwUZ3Xqq4KubMpLSpG25JRAgF_8c2rJXaqrlO78/pub?output=csv";
 
         Papa.parse(csvUrl, {
-download: true,
-header: true,
-complete: function(results) {
-results.data.forEach(function(row) {
-var coordStr = row["住所または座標"];
-if (coordStr && coordStr.includes(",")) {
-var parts = coordStr.split(",");
-var lat = parseFloat(parts[0].trim());
-var lng = parseFloat(parts[1].trim());
-if (!isNaN(lat) && !isNaN(lng)) {
-    var title = row["場所の名称"] || "";
-    var era = row["時代・年"] || "";
-    var desc = row["説明・歴史"] || "";
-    var popupContent = "**" + title + "** (" + era + ")
-
-" + desc;
-var imgUrl = row["画像URL"];
-if (imgUrl && imgUrl.trim() !== "") {
-popupContent += "
-
-";
-}
-L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
-}
-```
-}
-});
+            download: true,
+            header: true,
+            complete: function(results) {
+                results.data.forEach(function(row) {
+                    var coordStr = row["住所または座標"];
+                    if (coordStr && coordStr.includes(",")) {
+                        var parts = coordStr.split(",");
+                        var lat = parseFloat(parts[0].trim());
+                        var lng = parseFloat(parts[1].trim());
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            var title = row["場所の名称"] || "";
+                            var era = row["時代・年"] || "";
+                            var desc = row["説明・歴史"] || "";
+                            var popupContent = "<b>" + title + "</b> (" + era + ")<br>" + desc;
+                            var imgUrl = row["画像URL"];
+                            if (imgUrl && imgUrl.trim() !== "") {
+                                popupContent += "<br><img src=\"" + imgUrl.trim() + "\" class=\"popup-img\">";
+                            }
+                            L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+                        }
+                    }
+                });
+            }
         });
-        
     </script>
 </body>
-</html>
 </html>

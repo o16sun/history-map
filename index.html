@@ -20,21 +20,34 @@
         var csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0Sq52Je9MzQbPIzhiUtoZPxriXZFdKecHHKVwUZ3Xqq4KubMpLSpG25JRAGF_8c2rJXaqrLVn5b/pub?output=csv";
 
         Papa.parse(csvUrl, {
-            download: true,
-            header: true,
-            complete: function(results) {
-                results.data.forEach(function(row) {
-                    if (row.lat && row.lng) {
-                        var lat = parseFloat(row.lat);
-                        var lng = parseFloat(row.lng);
-                        var popupContent = "<b>" + (row.name || "") + "</b><br>" + (row.description || "");
-                        if (row.image && row.image.trim() !== "") {
-                            popupContent += "<br><img src=\"" + row.image.trim() + "\" class=\"popup-img\">";
-                        }
-                        L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
-                    }
-                });
-            }
+download: true,
+header: true,
+complete: function(results) {
+results.data.forEach(function(row) {
+var coordStr = row["住所または座標"];
+if (coordStr && coordStr.includes(",")) {
+var parts = coordStr.split(",");
+var lat = parseFloat(parts[0].trim());
+var lng = parseFloat(parts[1].trim());
+if (!isNaN(lat) && !isNaN(lng)) {
+var title = row["場所の名称"] || "";
+var era = row["時代・年"] || "";
+var desc = row["説明・歴史"] || "";
+var popupContent = "" + title + " (" + era + ")
+
+" + desc;
+var imgUrl = row["画像URL"];
+if (imgUrl && imgUrl.trim() !== "") {
+popupContent += "
+
+";
+}
+L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+}
+}
+});
+}
+});
         });
     </script>
 </body>

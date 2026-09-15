@@ -17,7 +17,7 @@
         var map = L.map('map').setView([35.6812, 139.7671], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        var csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTTGq5p2wkGh7bZrlxSCAsyWJSW6f0rANHqVNuIVTuILokU2VqWE7o4mE0GV2RI-7mhjadUdKrRa-_r/pub?output=csv";
+        var csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0Sq52Je9MzQBpIZhIUtoZPxrIxZFdKecHHVErWUZ3Xqq4KUbMpgLsPg2SJRAGF_8e2rJxAqrLvm5b/pub?output=csv";
 
         Papa.parse(csvUrl, {
             download: true,

@@ -9,6 +9,8 @@
         .popup-img { width: 100%; max-width: 200px; height: auto; margin-top: 8px; border-radius: 4px; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<!-- 住所から緯度経度を自動検索するためのライブラリ -->
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 </head>
 <body>
     <div id="map"></div>
@@ -17,31 +19,46 @@
         var map = L.map('map').setView([35.6812, 139.7671], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        var csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0Sq52Je9MzQBpIZhIUtoZPxrIxZFdKecHHVErWUZ3Xqq4KUbMpgLsPg2SJRAGF_8e2rJxAqrLvm5b/pub?output=csv";
+        var csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0Sq52Je9MzQbPizhiUtoZPxrIxZFdKeCHKVwUZ3Xqq4KubMpLSpG25JRAgF_8c2rJXaqrlO78/pub?output=csv";
 
         Papa.parse(csvUrl, {
             download: true,
             header: true,
             complete: function(results) {
-                console.log("読み込んだデータ:", results.data);
                 results.data.forEach(function(row) {
-                    var coordStr = row["住所または座標"];
-                    console.log("処理中の行:", row["場所の名称"], coordStr);
-                    if (coordStr && coordStr.includes(",")) {
-                        var parts = coordStr.split(",");
+                    var address = row["住所または座標"];
+                    if (!address) return;
+
+                    var title = row["場所の名称"] || "";
+                    var era = row["時代・年"] || "";
+                    var desc = row["説明・歴史"] || "";
+                    var imgUrl = row["画像URL"];
+
+                    var popupContent = "<b>" + title + "</b> (" + era + ")<br>" + desc;
+                    if (imgUrl && imgUrl.trim() !== "") {
+                        popupContent += "<br><img src=\"" + imgUrl.trim() + "\" class=\"popup-img\">";
+                    }
+
+                    // 「緯度,経度」の形式か判定して処理
+                    if (address.includes(",")) {
+                        var parts = address.split(",");
                         var lat = parseFloat(parts[0].trim());
                         var lng = parseFloat(parts[1].trim());
                         if (!isNaN(lat) && !isNaN(lng)) {
-                            var title = row["場所の名称"] || "";
-                            var era = row["時代・年"] || "";
-                            var desc = row["説明・歴史"] || "";
-                            var popupContent = "<b>" + title + "</b> (" + era + ")<br>" + desc;
-                            var imgUrl = row["画像URL"];
-                            if (imgUrl && imgUrl.trim() !== "") {
-                                popupContent += "<br><img src=\"" + imgUrl.trim() + "\" class=\"popup-img\">";
-                            }
                             L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
                         }
+                    } else {
+                        // 漢字の住所の場合は自動で位置を検索してピンを立てる
+                        fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(address))
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data && data.length > 0) {
+                                    var lat = parseFloat(data[0].lat);
+                                    var lng = parseFloat(data[0].lon);
+                                    L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+                                }
+                            })
+                            .catch(err => console.error("ジオコーディングエラー:", err));
                     }
                 });
             }

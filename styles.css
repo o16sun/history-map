@@ -39,3 +39,14 @@ header h1 {
   height: calc(100vh - 50px);
   background-color: #e5e3df;
 }
+/* ポップアップ内の画像サイズを大きくする設定 */
+.leaflet-popup-content img {
+  width: 100%;       /* 幅いっぱいに広げる */
+  max-width: 280px;  /* スマホで見やすい最大幅に調整 */
+  height: auto;      /* 比率を保ったまま高さを自動調整 */
+}
+
+/* ポップアップ全体の幅や文字サイズを調整 */
+.leaflet-popup-content-wrapper {
+  font-size: 14px;  /* 文字を少し大きくする */
+}

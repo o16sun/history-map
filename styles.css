@@ -40,12 +40,18 @@ header h1 {
   background-color: #e5e3df;
 }
 
-/* ポップアップ内の画像サイズだけを調整する */
+/* ポップアップ内の画像サイズを調整する */
 .leaflet-popup-content img {
   width: 100%;
-  max-width: 200px;
+  max-width: 250px; /* ここで画像の大きさを調整できます（大きくしたい場合は数値を上げます） */
   height: auto;
   border-radius: 4px;
+}
+
+/* ポップアップの文字サイズや余白を読みやすく調整する */
+.leaflet-popup-content {
+  font-size: 15px;    /* 文字サイズを程よい大きさに戻す */
+  line-height: 1.5;
 }
 
 /* ポップアップの文字サイズを調整する */

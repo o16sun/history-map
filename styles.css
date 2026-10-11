@@ -52,16 +52,6 @@ header h1 {
   font-size: 15px;
   line-height: 1.5;
 }
-/* ポップアップの文字サイズや余白を読みやすく調整する */
-.leaflet-popup-content {
-  font-size: 15px;    /* 文字サイズを程よい大きさに戻す */
-  line-height: 1.5;
-}
-
-/* ポップアップの文字サイズを調整する */
-.leaflet-popup-content {
-  font-size: 14px;
-}
   line-height: 1.4;
 }し大きくする */
 }

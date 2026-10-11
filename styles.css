@@ -39,17 +39,24 @@ header h1 {
   height: calc(100vh - 50px);
   background-color: #e5e3df;
 }
-/* ポップアップ内の画像のみ大きく表示する */
+/* マップ上のピン（マーカー）のサイズが大きくなっているのを直す */
+.leaflet-marker-icon {
+  width: 25px !important;
+  height: 41px !important;
+}
+
+/* ポップアップ内の画像サイズだけを調整する */
 .leaflet-popup-content img {
   width: 100%;
-  max-width: 250px;
+  max-width: 200px;
   height: auto;
   border-radius: 4px;
 }
 
-/* ポップアップの吹き出し自体の最大幅を調整 */
+/* ポップアップの文字サイズを調整する */
 .leaflet-popup-content {
   font-size: 14px;
+}
   line-height: 1.4;
 }し大きくする */
 }

@@ -39,11 +39,6 @@ header h1 {
   height: calc(100vh - 50px);
   background-color: #e5e3df;
 }
-/* マップ上のピン（マーカー）のサイズが大きくなっているのを直す */
-.leaflet-marker-icon {
-  width: 25px !important;
-  height: 41px !important;
-}
 
 /* ポップアップ内の画像サイズだけを調整する */
 .leaflet-popup-content img {

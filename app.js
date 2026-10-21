@@ -6,6 +6,35 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
+// GoogleフォームのベースURL（位置情報のentry IDを組み込み済み）
+const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfZdkXwJ7wW6_VCqoanb8EK2q87C5LnyPd_VESpuryrA7B6Iw/viewform?usp=pp_url&entry.1010821055=';
+
+// 地図をクリックしたときの処理（クリックした場所から投稿できるようにする）
+map.on('click', function(e) {
+  const lat = e.latlng.lat.toFixed(6);
+  const lng = e.latlng.lng.toFixed(6);
+  const latLngStr = `${lat},${lng}`;
+
+  // フォームを開くURL（クリックした座標が自動で入る）
+  const submitUrl = `${formBaseUrl}${encodeURIComponent(latLngStr)}`;
+
+  // ポップアップの内容を作成
+  const popupContent = `
+    <div style="text-align: center;">
+      <strong>ここについて投稿する</strong><br>
+      <small>座標: ${latLngStr}</small><br><br>
+      <a href="${submitUrl}" target="_blank" style="display: inline-block; background: #1a73e8; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: bold;">
+        この場所の情報を投稿 📝
+      </a>
+    </div>
+  `;
+
+  L.popup()
+    .setLatLng(e.latlng)
+    .setContent(popupContent)
+    .openOn(map);
+});
+
 // Web公開したGoogleスプレッドシートのCSV URL
 const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQgpsS1Bqgs0hbln0HkezioWWcFdlEUHTM1qosNRlrFEZdWbnGrnhgdIgw4x74OIwPXxQs7T70ADmyG/pub?output=csv';
 
@@ -32,18 +61,16 @@ function parseCSV(text) {
   });
 }
 
-// 住所や文字から緯度経度を取得してピンを立てる関数（ジオコーディング）
+// 住所や座標からピンを立てる関数
 async function geocodeAndAddMarker(title, era, desc, location, imgUrl, author) {
   let lat = null;
   let lng = null;
 
-  // 1. 位置情報が直接「35.68,139.76」のような数値座標の場合
   const coordMatch = location.match(/^(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)$/);
   if (coordMatch) {
     lat = parseFloat(coordMatch[1]);
     lng = parseFloat(coordMatch[3]);
   } else {
-    // 2. 住所テキストの場合、OpenStreetMap Nominatimで緯度経度を検索
     try {
       const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`);
       const data = await response.json();
@@ -60,7 +87,7 @@ async function geocodeAndAddMarker(title, era, desc, location, imgUrl, author) {
     let popupContent = `<h3>${title}</h3>`;
     if (era) popupContent += `<p><strong>時代・年:</strong> ${era}</p>`;
     if (desc) popupContent += `<p>${desc}</p>`;
-    if (imgUrl) popupContent += `<img src="${imgUrl}" alt="${title}">`;
+    if (imgUrl) popupContent += `<img src="${imgUrl}" alt="${title}" style="max-width:100%;">`;
     if (author) popupContent += `<p><small>投稿者: ${author}</small></p>`;
 
     L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
@@ -72,20 +99,18 @@ fetch(csvUrl)
   .then(response => response.text())
   .then(csvText => {
     const rows = parseCSV(csvText);
-    // ヘッダー行を除いて2行目からループ処理
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
       if (!row || row.length < 8) continue;
 
-      const title = row[1];       // B列: 場所の名称
-      const era = row[2];         // C列: 時代・年
-      const desc = row[3];        // D列: 説明・歴史
-      const location = row[4];    // E列: 住所または座標
-      const imgUrl = row[5];      // F列: 画像URL
-      const author = row[6];      // G列: 投稿者名
-      const permission = row[7];  // H列: 掲載許可
+      const title = row[1];
+      const era = row[2];
+      const desc = row[3];
+      const location = row[4];
+      const imgUrl = row[5];
+      const author = row[6];
+      const permission = row[7];
 
-      // H列が「OK」の場合のみマップにピンを立てる
       if (permission && permission.toUpperCase() === 'OK') {
         geocodeAndAddMarker(title, era, desc, location, imgUrl, author);
       }

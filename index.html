@@ -1,18 +1,124 @@
-/* 右上に固定する投稿ボタンのデザイン */
-#float-post-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 1000;
-  background-color: #1a73e8;
-  color: #ffffff;
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: bold;
-  text-decoration: none;
-  border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-}
-#float-post-btn:hover {
-  background-color: #1557b0;
-}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>歴史風景マップ</title>
+  <!-- LeafletのCSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    html, body, #map {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .popup-img {
+      width: 100%;
+      max-width: 200px;
+      height: auto;
+      margin-top: 8px;
+      border-radius: 4px;
+    }
+    /* 右上に固定する投稿ボタンのデザイン */
+    #float-post-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      background-color: #1a73e8;
+      color: #ffffff;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: bold;
+      text-decoration: none;
+      border-radius: 4px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+    #float-post-btn:hover {
+      background-color: #1557b0;
+    }
+  </style>
+  <!-- PapaParse（CSV読み込み用ライブラリ） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+
+  <!-- 地図を表示するエリア -->
+  <div id="map"></div>
+
+  <!-- 右上に常時表示する投稿ボタン -->
+  <a href="https://docs.google.com/forms/d/e/1FAIpQLSfZdkXwJ7wW6_VCqoanb8EK2q87C5LnyPd_VESpuryrA7B6Iw/viewform?usp=pp_url" target="_blank" id="float-post-btn">
+    ＋ 投稿する
+  </a>
+
+  <!-- LeafletのJavaScript -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    // マップの初期化（日本全体を表示）
+    var map = L.map('map').setView([36.578056, 136.648056], 5);
+
+    // OpenStreetMapのタイルを追加
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Googleスプレッドシートの公開CSV URL
+    var csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQgpsS1Bqgs0hbln0HkezioWWcFdlEUHTM1qosNRlrFEZdWbnGrnhgdIgw4x74OIwPXxQs7T70ADmyG/pub?output=csv';
+
+    // PapaParseでCSVを読み込む
+    Papa.parse(csvUrl, {
+      download: true,
+      header: true,
+      complete: function(results) {
+        results.data.forEach(function(row) {
+          var location = row["住所または座標"] || row["住所"] || "";
+          if (!location) return;
+
+          var title = row["場所の名称"] || "";
+          var era = row["時代・年"] || "";
+          var desc = row["説明・歴史"] || "";
+          var imgUrl = row["画像URL"] || "";
+          var author = row["投稿者名"] || "";
+          var permission = row["掲載許可"] || "";
+
+          // 掲載許可が「OK」のものだけピンを立てる
+          if (permission.trim().toUpperCase() !== 'OK') return;
+
+          var popupContent = `<b>${title}</b>`;
+          if (era) popupContent += ` (${era})<br>`;
+          if (desc) popupContent += `<br>${desc}`;
+          if (imgUrl && imgUrl.trim() !== "") {
+            popupContent += `<br><img src="${imgUrl.trim()}" class="popup-img">`;
+          }
+          if (author) {
+            popupContent += `<br><small>投稿者: ${author}</small>`;
+          }
+
+          // 緯度・経度の形式か判定して処理
+          if (location.includes(',')) {
+            var parts = location.split(',');
+            var lat = parseFloat(parts[0].trim());
+            var lng = parseFloat(parts[1].trim());
+            if (!isNaN(lat) && !isNaN(lng)) {
+              L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+            }
+          } else {
+            // 住所の文字から位置を検索してピンを立てる
+            fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(location))
+              .then(response => response.json())
+              .then(data => {
+                if (data && data.length > 0) {
+                  var lat = parseFloat(data[0].lat);
+                  var lng = parseFloat(data[0].lon);
+                  L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+                }
+              })
+              .catch(err => console.error("ジオコーディングエラー:", err));
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

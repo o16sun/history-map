@@ -6,8 +6,8 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-// GoogleフォームのURL（事前入力用のentry IDを含む）
-const formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfZdkXwJ7wW6_VCqoanb8EK2q87C5LnyPd_VESpuryrA7B6Iw/viewform?usp=pp_url';
+// config.js からフォームのURLを読み込む（設定されていない場合はデフォルトを使用）
+const targetFormUrl = (typeof CONFIG !== 'undefined' && CONFIG.formUrl) ? CONFIG.formUrl : 'https://docs.google.com/forms/d/e/1FAIpQLSfZdkXwJ7wW6_VCqoanb8EK2q87C5LnyPd_VESpuryrA7B6Iw/viewform?usp=pp_url';
 
 // 画面の右上に「投稿ボタン」を常時表示するコントロールを作成
 const PostButtonControl = L.Control.extend({
@@ -17,14 +17,13 @@ const PostButtonControl = L.Control.extend({
   onAdd: function (map) {
     const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
     const button = L.DomUtil.create('a', '', container);
-    button.href = formUrl;
+    button.href = targetFormUrl;
     button.target = '_blank';
     button.innerHTML = '＋ 投稿する';
     button.title = '新しい歴史スポットや写真を投稿する';
     
-    // ボタンのデザイン（見やすいように青い背景に白文字）
+    // ボタンのデザイン
     button.style.backgroundColor = '#1a73e8';
-    button.style.color = '#white';
     button.style.color = '#ffffff';
     button.style.padding = '8px 12px';
     button.style.fontSize = '14px';
@@ -34,9 +33,7 @@ const PostButtonControl = L.Control.extend({
     button.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
     button.style.display = 'block';
 
-    // マップのクリックイベントがボタンに伝わらないようにする
     L.DomEvent.disableClickPropagation(button);
-
     return container;
   }
 });

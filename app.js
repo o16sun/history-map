@@ -6,34 +6,43 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-// GoogleフォームのベースURL（位置情報のentry IDを組み込み済み）
-const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfZdkXwJ7wW6_VCqoanb8EK2q87C5LnyPd_VESpuryrA7B6Iw/viewform?usp=pp_url&entry.1010821055=';
+// GoogleフォームのURL（事前入力用のentry IDを含む）
+const formUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSfZdkXwJ7wW6_VCqoanb8EK2q87C5LnyPd_VESpuryrA7B6Iw/viewform?usp=pp_url';
 
-// 地図をクリックしたときの処理（クリックした場所から投稿できるようにする）
-map.on('click', function(e) {
-  const lat = e.latlng.lat.toFixed(6);
-  const lng = e.latlng.lng.toFixed(6);
-  const latLngStr = `${lat},${lng}`;
+// 画面の右上に「投稿ボタン」を常時表示するコントロールを作成
+const PostButtonControl = L.Control.extend({
+  options: {
+    position: 'topright'
+  },
+  onAdd: function (map) {
+    const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+    const button = L.DomUtil.create('a', '', container);
+    button.href = formUrl;
+    button.target = '_blank';
+    button.innerHTML = '＋ 投稿する';
+    button.title = '新しい歴史スポットや写真を投稿する';
+    
+    // ボタンのデザイン（見やすいように青い背景に白文字）
+    button.style.backgroundColor = '#1a73e8';
+    button.style.color = '#white';
+    button.style.color = '#ffffff';
+    button.style.padding = '8px 12px';
+    button.style.fontSize = '14px';
+    button.style.fontWeight = 'bold';
+    button.style.textDecoration = 'none';
+    button.style.borderRadius = '4px';
+    button.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+    button.style.display = 'block';
 
-  // フォームを開くURL（クリックした座標が自動で入る）
-  const submitUrl = `${formBaseUrl}${encodeURIComponent(latLngStr)}`;
+    // マップのクリックイベントがボタンに伝わらないようにする
+    L.DomEvent.disableClickPropagation(button);
 
-  // ポップアップの内容を作成
-  const popupContent = `
-    <div style="text-align: center;">
-      <strong>ここについて投稿する</strong><br>
-      <small>座標: ${latLngStr}</small><br><br>
-      <a href="${submitUrl}" target="_blank" style="display: inline-block; background: #1a73e8; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: bold;">
-        この場所の情報を投稿 📝
-      </a>
-    </div>
-  `;
-
-  L.popup()
-    .setLatLng(e.latlng)
-    .setContent(popupContent)
-    .openOn(map);
+    return container;
+  }
 });
+
+// マップに投稿ボタンを追加
+map.addControl(new PostButtonControl());
 
 // Web公開したGoogleスプレッドシートのCSV URL
 const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQgpsS1Bqgs0hbln0HkezioWWcFdlEUHTM1qosNRlrFEZdWbnGrnhgdIgw4x74OIwPXxQs7T70ADmyG/pub?output=csv';

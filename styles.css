@@ -54,3 +54,21 @@ header h1 {
 }
   line-height: 1.4;
 }
+/* 右上に固定する投稿ボタンのデザイン */
+#float-post-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  background-color: #1a73e8;
+  color: #ffffff;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  text-decoration: none;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+#float-post-btn:hover {
+  background-color: #1557b0;
+}

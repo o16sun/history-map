@@ -63,10 +63,99 @@
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // Googleスプレッドシートの公開CSV URL
+    // --- 1. サンプルデータ（江戸時代〜昭和1970年代の全国スポット） ---
+    var sampleData = [
+      {
+        title: "二条城",
+        era: "1603年（江戸時代初期）",
+        desc: "徳川家康が造営した城郭。大政奉還の舞台としても知られる江戸時代の重要歴史スポット。",
+        lat: 35.0142,
+        lng: 135.7482,
+        author: "サンプル"
+      },
+      {
+        title: "東京タワー",
+        era: "1958年（昭和33年）",
+        desc: "高度経済成長期の日本を象徴する電波塔。昭和の東京のシンボル。",
+        lat: 35.6586,
+        lng: 139.7454,
+        author: "サンプル"
+      },
+      {
+        title: "大阪万博記念公園（太陽の塔）",
+        era: "1970年（昭和45年）",
+        desc: "1970年に開催された日本万国博覧会（大阪万博）のシンボルタワー。",
+        lat: 34.8093,
+        lng: 135.5323,
+        author: "サンプル"
+      },
+      {
+        title: "原爆ドーム（旧広島県産業奨励館）",
+        era: "1915年（大正4年）",
+        desc: "大正時代に建てられた洋風建築。戦争の悲惨さと平和の尊さを伝える歴史的建造物。",
+        lat: 34.3955,
+        lng: 132.4536,
+        author: "サンプル"
+      },
+      {
+        title: "札幌時計台",
+        era: "1878年（明治11年）",
+        desc: "旧札幌農学校の演武場として建てられた歴史的建築物。明治の北海道開拓の象徴。",
+        lat: 43.0625,
+        lng: 141.3536,
+        author: "サンプル"
+      },
+      {
+        title: "首里城正殿復元跡",
+        era: "1925年（大正14年国宝指定・琉球王国時代）",
+        desc: "琉球王国の歴史を今に伝える城跡。近代の指定や復元を経て沖縄のシンボルに。",
+        lat: 26.2170,
+        lng: 127.7195,
+        author: "サンプル"
+      },
+      {
+        title: "旧開智学校",
+        era: "1876年（明治9年）",
+        desc: "長野県松本市にある日本最古級の擬洋風小学校校舎。明治の教育の歴史を伝える。",
+        lat: 36.2398,
+        lng: 137.9691,
+        author: "サンプル"
+      },
+      {
+        title: "道後温泉本館",
+        era: "1894年（明治27年）",
+        desc: "愛媛県松山市にある木造三層楼の浴場。明治時代の木造建築美が残る名所。",
+        lat: 33.8520,
+        lng: 132.7858,
+        author: "サンプル"
+      },
+      {
+        title: "長崎グラバー園",
+        era: "1863年（文久3年・幕末）",
+        desc: "幕末から明治期の異人館が集まる歴史公園。トーマス・グラバーの旧邸宅がある。",
+        lat: 32.7335,
+        lng: 129.8698,
+        author: "サンプル"
+      },
+      {
+        title: "横浜赤レンガ倉庫",
+        era: "1911年（明治44年）",
+        desc: "明治・大正期に保税倉庫として建設された赤レンガ造りの歴史的建築物。",
+        lat: 35.4528,
+        lng: 139.6425,
+        author: "サンプル"
+      }
+    ];
+
+    // サンプルデータをマップに配置する処理
+    sampleData.forEach(function(item) {
+      var popupContent = `<b>${item.title}</b> (${item.era})<br><br>${item.desc}<br><small>投稿者: ${item.author}</small>`;
+      L.marker([item.lat, item.lng]).addTo(map).bindPopup(popupContent);
+    });
+
+    // --- 2. Googleスプレッドシートから一般投稿データを取得して配置する処理 ---
     var csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQgpsS1Bqgs0hbln0HkezioWWcFdlEUHTM1qosNRlrFEZdWbnGrnhgdIgw4x74OIwPXxQs7T70ADmyG/pub?output=csv';
 
-    // PapaParseでCSVを読み込む
     Papa.parse(csvUrl, {
       download: true,
       header: true,
@@ -95,7 +184,6 @@
             popupContent += `<br><small>投稿者: ${author}</small>`;
           }
 
-          // 緯度・経度の形式か判定して処理
           if (location.includes(',')) {
             var parts = location.split(',');
             var lat = parseFloat(parts[0].trim());
@@ -104,7 +192,6 @@
               L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
             }
           } else {
-            // 住所の文字から位置を検索してピンを立てる
             fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(location))
               .then(response => response.json())
               .then(data => {

@@ -14,194 +14,178 @@
     }
     .popup-img {
       width: 100%;
-      max-width: 200px;
+      max-width: 220px;
       height: auto;
       margin-top: 8px;
-      border-radius: 4px;
+      border-radius: 6px;
+      object-fit: cover;
     }
     /* 右上に固定する投稿ボタンのデザイン */
-    #float-post-btn {
+    .post-btn-container {
       position: absolute;
       top: 20px;
       right: 20px;
       z-index: 1000;
+    }
+    .post-btn {
+      display: inline-block;
+      padding: 10px 18px;
       background-color: #1a73e8;
       color: #ffffff;
-      padding: 10px 16px;
-      font-size: 14px;
       font-weight: bold;
       text-decoration: none;
-      border-radius: 4px;
+      border-radius: 6px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      font-size: 14px;
+      transition: background-color 0.2s;
     }
-    #float-post-btn:hover {
+    .post-btn:hover {
       background-color: #1557b0;
     }
   </style>
-  <!-- PapaParse（CSV読み込み用ライブラリ） -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
 
-  <!-- 地図を表示するエリア -->
+  <!-- 右上の投稿ボタン -->
+  <div class="post-btn-container">
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLSc-PLACEHOLDER/viewform" target="_blank" class="post-btn">＋ 投稿する</a>
+  </div>
+
+  <!-- マップ表示エリア -->
   <div id="map"></div>
 
-  <!-- 右上に常時表示する投稿ボタン -->
-  <a href="https://docs.google.com/forms/d/e/1FAIpQLSfZdkXwJ7wW6_VCqoanb8EK2q87C5LnyPd_VESpuryrA7B6Iw/viewform?usp=pp_url" target="_blank" id="float-post-btn">
-    ＋ 投稿する
-  </a>
-
-  <!-- LeafletのJavaScript -->
+  <!-- JSライブラリ -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 
   <script>
-    // マップの初期化（日本全体を表示）
-    var map = L.map('map').setView([36.578056, 136.648056], 5);
+    // 1. マップの初期化（日本全体を表示）
+    var map = L.map('map').setView([36.5, 137.5], 5);
 
-    // OpenStreetMapのタイルを追加
+    // 背景地図（OpenStreetMap）
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    // --- 1. サンプルデータ（江戸時代〜昭和1970年代の全国スポット） ---
-    var sampleData = [
+    // 2. 埋め込みサンプルデータ（画像付き）
+    var sampleLocations = [
       {
         title: "二条城",
         era: "1603年（江戸時代初期）",
-        desc: "徳川家康が造営した城郭。大政奉還の舞台としても知られる江戸時代の重要歴史スポット。",
-        lat: 35.0142,
-        lng: 135.7482,
-        author: "サンプル"
+        description: "徳川家康が造営した城郭。大政奉還の舞台としても知られる江戸時代の重要歴史スポット。",
+        author: "サンプル",
+        location: "35.0142,135.7482",
+        imgUrl: "https://images.unsplash.com/photo-1578637387939-43c525550085?w=500&auto=format&fit=crop"
       },
       {
         title: "東京タワー",
         era: "1958年（昭和33年）",
-        desc: "高度経済成長期の日本を象徴する電波塔。昭和の東京のシンボル。",
-        lat: 35.6586,
-        lng: 139.7454,
-        author: "サンプル"
+        description: "昭和の高度経済成長期を象徴する電波塔。東京のシンボルとして親しまれています。",
+        author: "サンプル",
+        location: "35.6586,139.7454",
+        imgUrl: "https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=500&auto=format&fit=crop"
       },
       {
-        title: "大阪万博記念公園（太陽の塔）",
+        title: "大阪万博記念公園",
         era: "1970年（昭和45年）",
-        desc: "1970年に開催された日本万国博覧会（大阪万博）のシンボルタワー。",
-        lat: 34.8093,
-        lng: 135.5323,
-        author: "サンプル"
-      },
-      {
-        title: "原爆ドーム（旧広島県産業奨励館）",
-        era: "1915年（大正4年）",
-        desc: "大正時代に建てられた洋風建築。戦争の悲惨さと平和の尊さを伝える歴史的建造物。",
-        lat: 34.3955,
-        lng: 132.4536,
-        author: "サンプル"
-      },
-      {
-        title: "札幌時計台",
-        era: "1878年（明治11年）",
-        desc: "旧札幌農学校の演武場として建てられた歴史的建築物。明治の北海道開拓の象徴。",
-        lat: 43.0625,
-        lng: 141.3536,
-        author: "サンプル"
-      },
-      {
-        title: "首里城正殿復元跡",
-        era: "1925年（大正14年国宝指定・琉球王国時代）",
-        desc: "琉球王国の歴史を今に伝える城跡。近代の指定や復元を経て沖縄のシンボルに。",
-        lat: 26.2170,
-        lng: 127.7195,
-        author: "サンプル"
-      },
-      {
-        title: "旧開智学校",
-        era: "1876年（明治9年）",
-        desc: "長野県松本市にある日本最古級の擬洋風小学校校舎。明治の教育の歴史を伝える。",
-        lat: 36.2398,
-        lng: 137.9691,
-        author: "サンプル"
+        description: "日本万国博覧会（大阪万博）の跡地。岡本太郎デザインの「太陽の塔」が今も残るスポット。",
+        author: "サンプル",
+        location: "34.8105,135.5323",
+        imgUrl: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=500&auto=format&fit=crop"
       },
       {
         title: "道後温泉本館",
         era: "1894年（明治27年）",
-        desc: "愛媛県松山市にある木造三層楼の浴場。明治時代の木造建築美が残る名所。",
-        lat: 33.8520,
-        lng: 132.7858,
-        author: "サンプル"
+        description: "愛媛県松山市にある木造三層楼の浴場。明治時代の木造建築美が残る名所。",
+        author: "サンプル",
+        location: "33.8520,132.7858",
+        imgUrl: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=500&auto=format&fit=crop"
       },
       {
-        title: "長崎グラバー園",
-        era: "1863年（文久3年・幕末）",
-        desc: "幕末から明治期の異人館が集まる歴史公園。トーマス・グラバーの旧邸宅がある。",
-        lat: 32.7335,
-        lng: 129.8698,
-        author: "サンプル"
-      },
-      {
-        title: "横浜赤レンガ倉庫",
-        era: "1911年（明治44年）",
-        desc: "明治・大正期に保税倉庫として建設された赤レンガ造りの歴史的建築物。",
-        lat: 35.4528,
-        lng: 139.6425,
-        author: "サンプル"
+        title: "札幌市時計台",
+        era: "1878年（明治11年）",
+        description: "旧札幌農学校演武場として建てられた、明治の開拓期を象徴する歴史的建造物。",
+        author: "サンプル",
+        location: "43.0625,141.3536",
+        imgUrl: "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=500&auto=format&fit=crop"
       }
     ];
 
-    // サンプルデータをマップに配置する処理
-    sampleData.forEach(function(item) {
-      var popupContent = `<b>${item.title}</b> (${item.era})<br><br>${item.desc}<br><small>投稿者: ${item.author}</small>`;
-      L.marker([item.lat, item.lng]).addTo(map).bindPopup(popupContent);
+    // 3. 共通のピン作成・ポップアップ生成関数
+    function addMarkerToMap(lat, lng, item) {
+      var popupContent = "<b>" + item.title + "</b>";
+      if (item.era) {
+        popupContent += " <small>(" + item.era + ")</small>";
+      }
+      popupContent += "<br><br>" + item.description;
+
+      // 画像URLが存在する場合は画像タグを追加
+      if (item.imgUrl) {
+        popupContent += "<br><img src='" + item.imgUrl + "' class='popup-img' alt='" + item.title + "'>";
+      }
+
+      if (item.author) {
+        popupContent += "<br><br><small>投稿者: " + item.author + "</small>";
+      }
+
+      L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+    }
+
+    // サンプルデータの描画
+    sampleLocations.forEach(function(item) {
+      if (item.location && item.location.includes(',')) {
+        var parts = item.location.split(',');
+        var lat = parseFloat(parts[0].trim());
+        var lng = parseFloat(parts[1].trim());
+        if (!isNaN(lat) && !isNaN(lng)) {
+          addMarkerToMap(lat, lng, item);
+        }
+      }
     });
 
-    // --- 2. Googleスプレッドシートから一般投稿データを取得して配置する処理 ---
-    var csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQgpsS1Bqgs0hbln0HkezioWWcFdlEUHTM1qosNRlrFEZdWbnGrnhgdIgw4x74OIwPXxQs7T70ADmyG/pub?output=csv';
+    // 4. Googleスプレッドシート（CSV）からのデータ読み込み
+    var sheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS_PLACEHOLDER/pub?output=csv";
 
-    Papa.parse(csvUrl, {
+    Papa.parse(sheetCsvUrl, {
       download: true,
       header: true,
       complete: function(results) {
-        results.data.forEach(function(row) {
-          var location = row["住所または座標"] || row["住所"] || "";
-          if (!location) return;
+        var data = results.data;
+        data.forEach(function(row) {
+          // 掲載許可が "OK" のものだけ処理
+          if (row["掲載許可"] === "OK") {
+            var item = {
+              title: row["スポット名"] || row["タイトル"] || "無題",
+              era: row["年代"] || row["時代"] || "",
+              description: row["説明"] || row["コメント"] || "",
+              author: row["投稿者名"] || "匿名",
+              imgUrl: row["画像URL"] || row["写真"] || ""
+            };
 
-          var title = row["場所の名称"] || "";
-          var era = row["時代・年"] || "";
-          var desc = row["説明・歴史"] || "";
-          var imgUrl = row["画像URL"] || "";
-          var author = row["投稿者名"] || "";
-          var permission = row["掲載許可"] || "";
+            var location = row["位置情報"] || row["住所"] || "";
 
-          // 掲載許可が「OK」のものだけピンを立てる
-          if (permission.trim().toUpperCase() !== 'OK') return;
-
-          var popupContent = `<b>${title}</b>`;
-          if (era) popupContent += ` (${era})<br>`;
-          if (desc) popupContent += `<br>${desc}`;
-          if (imgUrl && imgUrl.trim() !== "") {
-            popupContent += `<br><img src="${imgUrl.trim()}" class="popup-img">`;
-          }
-          if (author) {
-            popupContent += `<br><small>投稿者: ${author}</small>`;
-          }
-
-          if (location.includes(',')) {
-            var parts = location.split(',');
-            var lat = parseFloat(parts[0].trim());
-            var lng = parseFloat(parts[1].trim());
-            if (!isNaN(lat) && !isNaN(lng)) {
-              L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+            // 緯度経度の場合
+            if (location.includes(',')) {
+              var parts = location.split(',');
+              var lat = parseFloat(parts[0].trim());
+              var lng = parseFloat(parts[1].trim());
+              if (!isNaN(lat) && !isNaN(lng)) {
+                addMarkerToMap(lat, lng, item);
+              }
+            } 
+            // 住所文字列の場合（ジオコーディング）
+            else if (location.trim() !== "") {
+              fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(location))
+                .then(response => response.json())
+                .then(data => {
+                  if (data && data.length > 0) {
+                    var lat = parseFloat(data[0].lat);
+                    var lng = parseFloat(data[0].lon);
+                    addMarkerToMap(lat, lng, item);
+                  }
+                })
+                .catch(err => console.error("ジオコーディングエラー:", err));
             }
-          } else {
-            fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(location))
-              .then(response => response.json())
-              .then(data => {
-                if (data && data.length > 0) {
-                  var lat = parseFloat(data[0].lat);
-                  var lng = parseFloat(data[0].lon);
-                  L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
-                }
-              })
-              .catch(err => console.error("ジオコーディングエラー:", err));
           }
         });
       }

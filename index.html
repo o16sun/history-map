@@ -46,9 +46,9 @@
 </head>
 <body>
 
-  <!-- 右上の投稿ボタン -->
+  <!-- 右上の投稿ボタン（実際のGoogleフォームのURLを設定済み） -->
   <div class="post-btn-container">
-    <a href="https://docs.google.com/forms/d/e/1FAIpQLSc-PLACEHOLDER/viewform" target="_blank" class="post-btn">＋ 投稿する</a>
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLSfDAu2P0MA6PYdFz-dX_sAW-VX24rxKbVaoqwms1dB1iRFxkA/viewform?usp=sharing" target="_blank" class="post-btn">＋ 投稿する</a>
   </div>
 
   <!-- マップ表示エリア -->
@@ -67,7 +67,7 @@
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    // 2. 埋め込みサンプルデータ（それぞれの場所にぴったりの画像を正しく設定）
+    // 2. 埋め込みサンプルデータ（画像と説明の組み合わせを修正済み）
     var sampleLocations = [
       {
         title: "二条城",
@@ -119,7 +119,6 @@
       }
       popupContent += "<br><br>" + item.description;
 
-      // 画像URLが存在する場合は画像タグを追加
       if (item.imgUrl) {
         popupContent += "<br><img src='" + item.imgUrl + "' class='popup-img' alt='" + item.title + "'>";
       }

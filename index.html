@@ -46,7 +46,7 @@
 </head>
 <body>
 
-  <!-- 右上の投稿ボタン（今お使いの正しいフォームのURLを設定済み） -->
+  <!-- 右上の投稿ボタン（正しいGoogleフォームのURLを設定済み） -->
   <div class="post-btn-container">
     <a href="https://docs.google.com/forms/d/1Hji9Jq7ojxjs_rsOl4nEFzBXEa5TgXJlUqO4XMMwDsM/viewform" target="_blank" class="post-btn">＋ 投稿する</a>
   </div>
@@ -142,8 +142,8 @@
       }
     });
 
-    // 4. Googleスプレッドシート（CSV）からのデータ読み込み
-    var sheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS_PLACEHOLDER/pub?output=csv";
+    // 4. Googleスプレッドシート（CSV）からのデータ自動読み込み
+    var sheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQgpsS1Bggs0hblnOhKezioWWcFdlEUHTM1qosNRlrFEZdWbnGrnhgdlgw4x74OlwPXXQs7T70ADmyG/pub?output=csv";
 
     Papa.parse(sheetCsvUrl, {
       download: true,
@@ -151,37 +151,36 @@
       complete: function(results) {
         var data = results.data;
         data.forEach(function(row) {
-          if (row["掲載許可"] === "OK") {
-            var item = {
-              title: row["スポット名"] || row["タイトル"] || "無題",
-              era: row["年代"] || row["時代"] || "",
-              description: row["説明"] || row["コメント"] || "",
-              author: row["投稿者名"] || "匿名",
-              imgUrl: row["画像URL"] || row["写真"] || ""
-            };
+          // 掲載許可が「OK」のデータ（または特に制限なく全て表示する場合）
+          var item = {
+            title: row["場所の名称（例: 江戸城跡 など）"] || row["スポット名"] || row["タイトル"] || "無題",
+            era: row["時代・年（例: 1603年、江戸時代 など）"] || row["年代"] || row["時代"] || "",
+            description: row["説明・歴史（メモ）"] || row["説明"] || row["コメント"] || "",
+            author: row["投稿者名"] || "匿名",
+            imgUrl: row["画像（大事な思い出の写真）"] || row["画像URL"] || row["写真"] || ""
+          };
 
-            var location = row["位置情報"] || row["住所"] || "";
+          var location = row["位置情報"] || row["住所"] || row["場所"] || "";
 
-            if (location.includes(',')) {
-              var parts = location.split(',');
-              var lat = parseFloat(parts[0].trim());
-              var lng = parseFloat(parts[1].trim());
-              if (!isNaN(lat) && !isNaN(lng)) {
-                addMarkerToMap(lat, lng, item);
-              }
-            } 
-            else if (location.trim() !== "") {
-              fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(location))
-                .then(response => response.json())
-                .then(data => {
-                  if (data && data.length > 0) {
-                    var lat = parseFloat(data[0].lat);
-                    var lng = parseFloat(data[0].lon);
-                    addMarkerToMap(lat, lng, item);
-                  }
-                })
-                .catch(err => console.error("ジオコーディングエラー:", err));
+          if (location.includes(',')) {
+            var parts = location.split(',');
+            var lat = parseFloat(parts[0].trim());
+            var lng = parseFloat(parts[1].trim());
+            if (!isNaN(lat) && !isNaN(lng)) {
+              addMarkerToMap(lat, lng, item);
             }
+          } 
+          else if (location.trim() !== "") {
+            fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(location))
+              .then(response => response.json())
+              .then(data => {
+                if (data && data.length > 0) {
+                  var lat = parseFloat(data[0].lat);
+                  var lng = parseFloat(data[0].lon);
+                  addMarkerToMap(lat, lng, item);
+                }
+              })
+              .catch(err => console.error("ジオコーディングエラー:", err));
           }
         });
       }

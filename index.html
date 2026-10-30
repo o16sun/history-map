@@ -2,608 +2,189 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SHOP MASTER：ゼロからの店舗経営</title>
+  <title>歴史風景マップ</title>
+  <!-- LeafletのCSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    :root {
-      --bg-color: #ffffff;
-      --text-color: #111111;
-      --border-color: #222222;
-      --button-hover: #f0f0f0;
-    }
-
-    * {
-      box-sizing: border-box;
+    html, body, #map {
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    }
-
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      display: flex;
-      justify-content: center;
-      padding: 10px;
-      line-height: 1.6;
-    }
-
-    #app-container {
       width: 100%;
-      max-width: 480px;
-      border: 2px solid var(--border-color);
-      border-radius: 12px;
-      padding: 16px;
-      background: #fff;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      position: relative;
+      height: 100%;
     }
-
-    /* ヘッダー・ステータス */
-    .header-box {
-      border: 1.5px solid var(--border-color);
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 16px;
-      background-color: #ffffff;
-    }
-
-    .date-title {
-      font-size: 1.1rem;
-      font-weight: bold;
-      border-bottom: 1px solid var(--border-color);
-      padding-bottom: 6px;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .status-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px 12px;
-      font-size: 0.88rem;
-    }
-
-    .status-item {
-      display: flex;
-      justify-content: space-between;
-    }
-
-    /* ミニカレンダー風バー */
-    .calendar-bar {
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 6px 10px;
-      background: #fdfdfd;
-      font-size: 0.8rem;
-      margin-bottom: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    /* メインコンテンツ */
-    .story-card {
-      border: 1.5px solid var(--border-color);
-      border-radius: 8px;
-      padding: 14px;
-      margin-bottom: 16px;
-      background-color: #fff;
-    }
-
-    .story-title {
-      font-size: 1.05rem;
-      font-weight: bold;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .story-text {
-      font-size: 0.92rem;
-      margin-bottom: 12px;
-      white-space: pre-line;
-    }
-
-    /* 選択肢ボタン */
-    .choices-container {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    .choice-btn {
-      background-color: #fff;
-      border: 1.5px solid var(--border-color);
-      border-radius: 8px;
-      padding: 12px;
-      text-align: left;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      color: var(--text-color);
-      font-weight: 500;
-    }
-
-    .choice-btn:hover {
-      background-color: var(--button-hover);
-      transform: translateY(-1px);
-    }
-
-    /* アドバイザーネコ */
-    .advisor-box {
-      border: 1px dashed var(--border-color);
-      border-radius: 8px;
-      padding: 12px;
-      background-color: #ffffff;
-      font-size: 0.85rem;
-    }
-
-    .advisor-header {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      font-weight: bold;
-      margin-bottom: 6px;
-    }
-
-    .advisor-btn {
-      background: #111;
-      color: #fff;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      cursor: pointer;
-      margin-top: 6px;
-    }
-
-    .advisor-btn:hover {
-      opacity: 0.9;
-    }
-
-    .advisor-note {
-      font-size: 0.75rem;
-      color: #555;
+    .popup-img {
+      width: 100%;
+      max-width: 220px;
+      height: auto;
       margin-top: 8px;
-      border-top: 1px dotted #ccc;
-      padding-top: 4px;
-    }
-
-    /* モーダル（通帳風UI） */
-    .modal-overlay {
-      display: none;
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.6);
-      border-radius: 10px;
-      z-index: 100;
-      justify-content: center;
-      align-items: center;
-      padding: 16px;
-    }
-
-    .passbook-card {
-      background: #fbf9e6;
-      border: 2px solid #333;
-      border-radius: 8px;
-      width: 100%;
-      padding: 16px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-
-    .passbook-title {
-      font-family: monospace;
-      font-weight: bold;
-      font-size: 1rem;
-      border-bottom: 2px solid #333;
-      padding-bottom: 4px;
-      margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .passbook-line {
-      font-family: monospace;
-      font-size: 0.85rem;
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 6px;
-      padding: 4px 0;
-      border-bottom: 1px dotted #aaa;
-    }
-
-    .close-modal-btn {
-      width: 100%;
-      padding: 10px;
-      background: #222;
-      color: #fff;
-      border: none;
       border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 12px;
+      object-fit: cover;
     }
-
-    .mode-tag {
+    /* 右上に固定する投稿ボタンのデザイン */
+    .post-btn-container {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
+    .post-btn {
       display: inline-block;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      border: 1px solid var(--border-color);
+      padding: 10px 18px;
+      background-color: #1a73e8;
+      color: #ffffff;
+      font-weight: bold;
+      text-decoration: none;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      font-size: 14px;
+      transition: background-color 0.2s;
+    }
+    .post-btn:hover {
+      background-color: #1557b0;
     }
   </style>
 </head>
 <body>
 
-<div id="app-container">
-  <!-- 通帳モックモーダル -->
-  <div class="modal-overlay" id="passbook-modal">
-    <div class="passbook-card">
-      <div class="passbook-title">
-        <span>🏦 銀行普通預金通帳</span>
-        <span>記帳完了</span>
-      </div>
-      <div id="passbook-content"></div>
-      <button class="close-modal-btn" onclick="closePassbook()">通帳を閉じて次へ</button>
-    </div>
+  <!-- 右上の投稿ボタン（正しいGoogleフォームのURLを設定済み） -->
+  <div class="post-btn-container">
+    <a href="https://docs.google.com/forms/d/1Hji9Jq7ojxjs_rsOl4nEFzBXEa5TgXJlUqO4XMMwDsM/viewform" target="_blank" class="post-btn">＋ 投稿する</a>
   </div>
 
-  <!-- ヘッダー・ステータス -->
-  <div class="header-box">
-    <div class="date-title">
-      <span id="date-display">1年目 4月1日</span>
-      <span id="mode-display" class="mode-tag">未設定</span>
-    </div>
-    <!-- カレンダーインジケーター -->
-    <div class="calendar-bar">
-      <span>🗓️ カレンダー進行状況:</span>
-      <strong id="calendar-text">4月上旬（準備期間）</strong>
-    </div>
-    <div class="status-grid">
-      <div class="status-item"><span>💖 体力:</span> <span id="hp-display">20/20</span></div>
-      <div class="status-item"><span>👛 現金:</span> <span id="cash-display">100,000円</span></div>
-      <div class="status-item"><span>🏦 口座:</span> <span id="bank-display">500,000円</span></div>
-      <div class="status-item"><span>📄 計画書:</span> <span id="plan-display">0%</span></div>
-      <div class="status-item"><span>🏛️ 信頼度:</span> <span id="trust-display">0pt</span></div>
-    </div>
-  </div>
+  <!-- マップ表示エリア -->
+  <div id="map"></div>
 
-  <!-- メインシナリオ -->
-  <div class="story-card">
-    <div class="story-title" id="story-title">☕ 主人公の選択</div>
-    <div class="story-text" id="story-text">loading...</div>
-  </div>
+  <!-- JSライブラリ -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 
-  <!-- 選択肢 -->
-  <div class="choices-container" id="choices-container"></div>
+  <script>
+    // 1. マップの初期化（日本全体を表示）
+    var map = L.map('map').setView([36.5, 137.5], 5);
 
-  <!-- 税理士ネコのアドバイス -->
-  <div class="advisor-box">
-    <div class="advisor-header">
-      <span>🐱 税理士ネコのアドバイス</span>
-    </div>
-    <div id="advisor-body">
-      <p style="font-size: 0.8rem; color: #555;">「手持ちの2,000円を払って専門的な助言を聞くニャ？」</p>
-      <button class="advisor-btn" onclick="buyAdvice()">2,000円払ってアドバイスを聞く</button>
-    </div>
-    <div class="advisor-note">
-      ※顧問契約の相場：月額平均3万〜4万円（年間・決算料込みで約40万〜50万円）。融資や資金繰り対策にはプロのサポートが不可欠だニャ！
-    </div>
-  </div>
-</div>
+    // 背景地図（OpenStreetMap）
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
 
-<script>
-  // ゲーム状態
-  let state = {
-    day: 1,
-    month: 4,
-    year: 1,
-    calendarPhase: '4月上旬：準備期',
-    mode: '', 
-    hp: 20,
-    maxHp: 20,
-    cash: 100000,   // 手持ち現金 10万円
-    bank: 500000,   // 銀行口座 50万円
-    planProgress: 0,
-    trust: 0,
-    hasTestNote: false,
-    loanType: 'seisaku', // 'seisaku' or 'bank'
-    quoteType: '中古300万', // '新品500万' or '中古300万'
-    currentSceneKey: 'start'
-  };
-
-  function updateUI() {
-    document.getElementById('date-display').innerText = `${state.year}年目 ${state.month}月${state.day}日`;
-    document.getElementById('calendar-text').innerText = state.calendarPhase;
-    document.getElementById('hp-display').innerText = `${state.hp}/${state.maxHp}`;
-    document.getElementById('cash-display').innerText = `${state.cash.toLocaleString()}円`;
-    document.getElementById('bank-display').innerText = `${state.bank.toLocaleString()}円`;
-    document.getElementById('plan-display').innerText = `${state.planProgress}%`;
-    document.getElementById('trust-display').innerText = `${state.trust}pt`;
-
-    const modeNames = { standard: '正社員・未経験', experienced: '正社員・経験者', hard: '💀 ハードモード' };
-    document.getElementById('mode-display').innerText = modeNames[state.mode] || '未設定';
-  }
-
-  function buyAdvice() {
-    if (state.cash < 2000) {
-      alert("手持ちの現金が足りません！");
-      return;
-    }
-    state.cash -= 2000;
-    updateUI();
-
-    const scene = scenes[state.currentSceneKey];
-    const body = document.getElementById('advisor-body');
-    body.innerHTML = `<p style="color: #111; font-weight: bold;">🐱 「${scene.adviceText || '数字の根拠と自己資金の動線を明確にするのだニャ！'}」</p>`;
-  }
-
-  function resetAdviceBox() {
-    const body = document.getElementById('advisor-body');
-    body.innerHTML = `
-      <p style="font-size: 0.8rem; color: #555;">「手持ちの2,000円を払って専門的な助言を聞くニャ？」</p>
-      <button class="advisor-btn" onclick="buyAdvice()">2,000円払ってアドバイスを聞く</button>
-    `;
-  }
-
-  function showPassbook(line1, nextScene) {
-    const modal = document.getElementById('passbook-modal');
-    const content = document.getElementById('passbook-content');
-    content.innerHTML = `
-      <div class="passbook-line"><span>前月繰越</span><span>￥${(500000).toLocaleString()}</span></div>
-      <div class="passbook-line" style="color: blue; font-weight: bold;"><span>${line1.label}</span><span>￥${line1.amount.toLocaleString()}</span></div>
-      <div class="passbook-line" style="font-weight: bold; border-top: 1px solid #333;"><span>差引残高</span><span>￥${state.bank.toLocaleString()}</span></div>
-    `;
-    modal.style.display = 'flex';
-    modal.dataset.next = nextScene;
-  }
-
-  function closePassbook() {
-    const modal = document.getElementById('passbook-modal');
-    modal.style.display = 'none';
-    const next = modal.dataset.next;
-    if (next) renderScene(next);
-  }
-
-  // シーン定義
-  const scenes = {
-    start: {
-      title: "☕ 主人公のバックボーン選択",
-      text: "店舗経営を目指すあなた。創業前のあなたの「現在の職業」と「経験」を選んでください。\n手持ち現金は財布に10万円、銀行口座に50万円が入っています。\n選択によって融資審査の難易度が大きく変わります。",
-      adviceText: "ハードモードは融資不可の激辛ルートだニャ！電車代やカフェ代で手持ち現金が減っていくリアルな世界だぞ！",
-      choices: [
-        { text: "👔 【標準】異業種の正社員（カフェ未経験）\n（コツコツ貯蓄・信用高・実務経験なし）", next: 'setup_standard' },
-        { text: "🍳 【経験者】飲食店の正社員店長（経験7年）\n（同業種での確かな実績あり・融資で有利）", next: 'setup_experienced' },
-        { text: "💀 【ハードモード】完全未経験・無職（融資100%不可）\n（信用ゼロ・融資0円確定！自力で現金を残す逆転ルート）", next: 'setup_hard' }
-      ]
-    },
-
-    setup_standard: {
-      action: () => { state.mode = 'standard'; state.trust = 30; state.planProgress = 10; state.calendarPhase = '4月上旬：計画策定'; },
-      title: "📄 1年目 4月1日：脱サラ創業の決意",
-      text: "あなたは正社員。今月末で退職し、念願のカフェを開業する決意をした。\n手持ち現金10万、口座50万。\nどこから融資を引っ張るか、最初に選ぼう。",
-      adviceText: "初めての創業なら、無担保・無保証人で借りられる『日本政策金融公庫（セイサク）』が王道だニャ！",
-      choices: [
-        { text: "🏦 日本政策金融公庫（セイサク）に申し込むルートへ", action: () => { state.loanType = 'seisaku'; }, next: 'day10' },
-        { text: "🏛️ 地元の地方銀行（要預金実績・税理士紹介）に挑むルートへ", action: () => { state.loanType = 'bank'; state.trust -= 10; }, next: 'day10' }
-      ]
-    },
-
-    setup_experienced: {
-      action: () => { state.mode = 'experienced'; state.trust = 60; state.planProgress = 30; state.calendarPhase = '4月上旬：計画策定'; },
-      title: "🍳 1年目 4月1日：独立開業の決意",
-      text: "カフェで7年間店長を務めたあなたは独立を決意した。\n手持ち10万、口座50万に加え、確かな現場実績がある。",
-      adviceText: "7年の経験があればセイサクからの満額引き出しも余裕だニャ！",
-      choices: [
-        { text: "🏦 日本政策金融公庫（セイサク）に申し込む", action: () => { state.loanType = 'seisaku'; }, next: 'day10' }
-      ]
-    },
-
-    setup_hard: {
-      action: () => { state.mode = 'hard'; state.trust = 0; state.planProgress = 0; state.calendarPhase = '4月中旬：背水の陣'; },
-      title: "💀 1年目 4月1日：無職・実績ゼロからの挑戦",
-      text: "前職を退職し無職。飲食店経験もゼロ。\n手元には現金10万円と口座の50万円のみ。\n銀行もセイサクも、あなたに1円も貸してはくれないだろう。",
-      adviceText: "退路が断たれているニャ…！間借り営業と日雇いバイトで泥臭く生き残るのだ！",
-      choices: [
-        { text: "ダメ元でセイサクに申し込んでみる", next: 'day10' },
-        { text: "融資を端から諦め、50万円でできる間借り営業へ動く", next: 'hard_start' }
-      ]
-    },
-
-    day10: {
-      action: () => { state.cash -= 1800; state.calendarPhase = '4月中旬：物件仮押さえと計画'; },
-      title: "📑 1年目 4月10日：物件仮押さえと試算",
-      text: "駅前のカフェ（カフェ代・電車賃 -1,800円）で計画書を作成中。\n融資申し込みには「店舗の見取り図（15坪：テーブル2卓×各席2席、カウンター4席など）」と、厨房機器の見積もり添付が必要だ。\nどの規模で見積もりを作る？",
-      adviceText: "初期費用を抑えて審査に通りやすくするか、新品で揃えて最初に大きく借りるかだニャ！",
-      choices: [
-        {
-          text: "🅰️ 【中古プラン（融資希望300万円）】中古販売店を活用し、家賃光熱費の3ヶ月分の運転資金を手元に残す堅実設計",
-          action: () => { state.quoteType = '中古300万'; state.trust += 20; state.planProgress += 40; state.hasTestNote = true; },
-          next: 'day20'
-        },
-        {
-          text: "🅱️ 【新品プラン（融資希望500万円）】内装・厨房をすべて新品で見積もり、万全の状態でスタートする",
-          action: () => { state.quoteType = '新品500万'; state.trust -= 10; state.planProgress += 30; },
-          next: 'day20'
-        }
-      ]
-    },
-
-    day20: {
-      action: () => { state.cash -= 2500; state.calendarPhase = '4月下旬：面談予約と待ち時間'; },
-      title: "🏛️ 1年目 4月20日：面談日の決定と1週間の待機",
-      text: "書類一式を提出し、セイサク担当者から面談日の連絡が入る。\n面談日まで**約1週間**の待ち時間が発生（費用 -2,500円）。\n直前の準備として何をする？",
-      adviceText: "面談までの一週間が一番ソワソワする期間だニャ。追加の実績や受け答えの練習をしておこう！",
-      choices: [
-        {
-          text: "週末に知り合いのバーで『テスト営業』を行い、売上データの証拠資料を追加作成する",
-          action: () => { state.trust += 20; },
-          next: 'interview'
-        },
-        {
-          text: "イメージトレーニングをして当日を迎える",
-          action: () => { state.trust -= 5; },
-          next: 'interview'
-        }
-      ]
-    },
-
-    interview: {
-      action: () => { state.cash -= 960; state.calendarPhase = '4月下旬：融資面談本番'; },
-      title: "⚖️ 1年目 4月25日：【決戦】セイサクの融資面談",
-      text: "セイサクの面談室（往復電車賃 -960円）。担当者が鋭い目で見つめる。\n「万が一赤字が続いた場合、どうやって毎月返済を続けるおつもりですか？」",
-      adviceText: "ここが運命の分かれ道だニャ！現実的なリスク対策を答えられるか！？",
-      choices: [
-        {
-          text: "『最悪の場合でも、夜間の単発アルバイト等で返済原資を100%確保します』",
-          action: () => { state.trust += 20; },
-          next: 'waiting_period'
-        },
-        {
-          text: "『私のカフェは絶対にバズるので赤字になる想定はしていません』",
-          action: () => { state.trust -= 30; },
-          next: 'waiting_period'
-        }
-      ]
-    },
-
-    waiting_period: {
-      action: () => { state.calendarPhase = '5月上旬：結果待ちの2〜3週間'; },
-      title: "⏳ 1年目 5月上旬：胃が痛い結果待ち期間（2〜3週間）",
-      text: "面談が無事終了した。\nここから結果の電話連絡が来るまで**約2〜3週間**の長い審査待ち期間に入る。\nこの期間の過ごし方は……？",
-      adviceText: "この2〜3週間が経営者にとって一番長い期間だニャ。気晴らしや内装の打ち合わせを進めるのだ！",
-      choices: [
-        { text: "ドキドキしながら銀行からの連絡を待つ（5月中旬へ）", next: 'judge_passbook' }
-      ]
-    },
-
-    judge_passbook: {
-      title: "📞 1年目 5月中旬：ついに結果の電話連絡",
-      text: "スマホが鳴った。「セイサクですが、融資の件でお伝えが……」\n銀行ATMへ向かい、通帳を挿入して記帳ボタンを押す瞬間。",
-      adviceText: "諸費用（約8%）が引かれた実効額が振り込まれているか確認するのだニャ！",
-      choices: [
-        {
-          text: "通帳記帳して結果を確認する",
-          action: () => {
-            if (state.mode === 'hard' || state.trust < 30) {
-              // 否決
-            } else if (state.quoteType === '新品500万') {
-              if (state.trust >= 60) {
-                state.bank += 4600000; // 500万の8%引
-              } else {
-                state.bank += 2760000; // 減額
-              }
-            } else {
-              if (state.trust >= 60) {
-                state.bank += 2760000; // 300万の8%引
-              } else {
-                state.bank += 920000;
-              }
-            }
-          },
-          next: 'show_modal_passbook'
-        }
-      ]
-    },
-
-    show_modal_passbook: {
-      action: () => {
-        if (state.mode === 'hard' || state.trust < 30) {
-          showPassbook({ label: "振込：セイサク（審査否決）", amount: 0 }, 'may_result');
-        } else if (state.quoteType === '新品500万' && state.trust >= 60) {
-          showPassbook({ label: "振込：セイサク（新品プラン融資・諸費控除後）", amount: 4600000 }, 'may_result');
-        } else {
-          showPassbook({ label: "振込：セイサク（中古プラン融資・諸費控除後）", amount: 2760000 }, 'may_result');
-        }
+    // 2. 埋め込みサンプルデータ
+    var sampleLocations = [
+      {
+        title: "二条城",
+        era: "1603年（江戸時代初期）",
+        description: "徳川家康が造営した城郭。大政奉還の舞台としても知られる江戸時代の重要歴史スポット。",
+        author: "サンプル",
+        location: "35.0142,135.7482",
+        imgUrl: "https://images.unsplash.com/photo-1578637387939-43c525550085?w=500&auto=format&fit=crop"
       },
-      title: "記帳中...", text: "通帳の印字を確認中...", choices: []
-    },
-
-    may_result: {
-      title: "📅 1年目 5月下旬：オープンへ向けた本格始動",
-      text: () => {
-        if (state.bank >= 3000000) {
-          return `🎉 【融資実行：手元資金＋3ヶ月分の運転資金確保】\n見事に融資が実行され、家賃・光熱費の3ヶ月分がしっかり手元に残る安全な資金計画で店舗契約へ進める！`;
-        } else {
-          return `💀 【融資否決または大幅減額】\n計画を見直し、自力での間借り・極小路線へ切り替える必要がある！`;
-        }
+      {
+        title: "東京タワー",
+        era: "1958年（昭和33年）",
+        description: "昭和の高度経済成長期を象徴する電波塔。東京のシンボルとして親しまれています。",
+        author: "サンプル",
+        location: "35.6586,139.7454",
+        imgUrl: "https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=500&auto=format&fit=crop"
       },
-      adviceText: "手元に運転資金が残るかどうかが生死を分けるぞ！",
-      choices: [
-        { text: "15坪の見取り図を元に店舗契約と設営へ進む", next: 'hard_success' },
-        { text: "融資を諦めて自力・間借り路線でいく", next: 'hard_start' }
-      ]
-    },
-
-    // 泥臭い自力ルート
-    hard_start: {
-      action: () => { state.cash -= 15000; state.calendarPhase = '自力生存ルート'; },
-      title: "☕ 間借り営業と日々のリアル収支",
-      text: "夜間バーを借りて営業開始。\n【1日のリアル収支】\n・売上: 25,000円 / 原価: -7,500円 / 家賃歩合: -5,000円 / 食費・生活費: -11,000円\n→ 1日の手残りわずか1,500円（月4.5万）。\n無休の16時間労働と深夜バイトを掛け持ちして100万円を作るしかない！",
-      adviceText: "これが現実の厳しさだニャ！",
-      choices: [
-        {
-          text: "無休＋16時間労働＋深夜バイトで身体を張って現金を稼ぐ",
-          action: () => { state.cash += 450000; state.hp -= 12; },
-          next: 'hard_success'
-        }
-      ]
-    },
-
-    hard_success: {
-      title: "🏆 第1章 クリア：実践的経営力の証明",
-      text: "融資の仕組み、カレンダーでのスケジュール感、見取り図の作成、そして運転資金の重要性をすべて体験しました。\n手元には本物の経営ノウハウが残ります！",
-      adviceText: "お見事にゃ！現実の店舗経営でもこのシミュレーションを活かすのだニャ！",
-      choices: [
-        { text: "最初から別の設定で遊んでみる", next: 'start' }
-      ]
-    }
-  };
-
-  function renderScene(sceneKey) {
-    state.currentSceneKey = sceneKey;
-    const scene = scenes[sceneKey];
-    if (!scene) return;
-
-    if (scene.action) {
-      const overrideNext = scene.action();
-      if (overrideNext) {
-        renderScene(overrideNext);
-        return;
+      {
+        title: "大阪万博記念公園",
+        era: "1970年（昭和45年）",
+        description: "日本万国博覧会（大阪万博）の跡地。岡本太郎デザインの「太陽の塔」が今も残るスポット。",
+        author: "サンプル",
+        location: "34.8105,135.5323",
+        imgUrl: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=500&auto=format&fit=crop"
+      },
+      {
+        title: "道後温泉本館",
+        era: "1894年（明治27年）",
+        description: "愛媛県松山市にある木造三層楼の浴場。明治時代の木造建築美が残る名所。",
+        author: "サンプル",
+        location: "33.8520,132.7858",
+        imgUrl: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=500&auto=format&fit=crop"
+      },
+      {
+        title: "札幌市時計台",
+        era: "1878年（明治11年）",
+        description: "旧札幌農学校演武場として建てられた、明治の開拓期を象徴する歴史的建造物。",
+        author: "サンプル",
+        location: "43.0625,141.3536",
+        imgUrl: "https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=500&auto=format&fit=crop"
       }
+    ];
+
+    // 3. 共通のピン作成・ポップアップ生成関数
+    function addMarkerToMap(lat, lng, item) {
+      var popupContent = "<b>" + item.title + "</b>";
+      if (item.era) {
+        popupContent += " <small>(" + item.era + ")</small>";
+      }
+      popupContent += "<br><br>" + item.description;
+
+      if (item.imgUrl) {
+        popupContent += "<br><img src='" + item.imgUrl + "' class='popup-img' alt='" + item.title + "'>";
+      }
+
+      if (item.author) {
+        popupContent += "<br><br><small>投稿者: " + item.author + "</small>";
+      }
+
+      L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
     }
 
-    updateUI();
-    resetAdviceBox();
+    // サンプルデータの描画
+    sampleLocations.forEach(function(item) {
+      if (item.location && item.location.includes(',')) {
+        var parts = item.location.split(',');
+        var lat = parseFloat(parts[0].trim());
+        var lng = parseFloat(parts[1].trim());
+        if (!isNaN(lat) && !isNaN(lng)) {
+          addMarkerToMap(lat, lng, item);
+        }
+      }
+    });
 
-    document.getElementById('story-title').innerText = typeof scene.title === 'function' ? scene.title() : scene.title;
-    document.getElementById('story-text').innerText = typeof scene.text === 'function' ? scene.text() : scene.text;
+    // 4. Googleスプレッドシート（CSV）からのデータ自動読み込み
+    var sheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQgpsS1Bggs0hblnOhKezioWWcFdlEUHTM1qosNRlrFEZdWbnGrnhgdlgw4x74OlwPXXQs7T70ADmyG/pub?output=csv";
 
-    const choicesContainer = document.getElementById('choices-container');
-    choicesContainer.innerHTML = '';
+    Papa.parse(sheetCsvUrl, {
+      download: true,
+      header: true,
+      complete: function(results) {
+        var data = results.data;
+        data.forEach(function(row) {
+          // 掲載許可が「OK」のデータ（または特に制限なく全て表示する場合）
+          var item = {
+            title: row["場所の名称（例: 江戸城跡 など）"] || row["スポット名"] || row["タイトル"] || "無題",
+            era: row["時代・年（例: 1603年、江戸時代 など）"] || row["年代"] || row["時代"] || "",
+            description: row["説明・歴史（メモ）"] || row["説明"] || row["コメント"] || "",
+            author: row["投稿者名"] || "匿名",
+            imgUrl: row["画像（大事な思い出の写真）"] || row["画像URL"] || row["写真"] || ""
+          };
 
-    if (scene.choices) {
-      scene.choices.forEach(choice => {
-        const btn = document.createElement('button');
-        btn.className = 'choice-btn';
-        btn.innerText = choice.text;
-        btn.onclick = () => {
-          if (choice.action) choice.action();
-          const next = typeof choice.next === 'function' ? choice.next() : choice.next;
-          renderScene(next);
-        };
-        choicesContainer.appendChild(btn);
-      });
-    }
-  }
+          var location = row["位置情報"] || row["住所"] || row["場所"] || "";
 
-  // 初期化
-  renderScene('start');
-</script>
+          if (location.includes(',')) {
+            var parts = location.split(',');
+            var lat = parseFloat(parts[0].trim());
+            var lng = parseFloat(parts[1].trim());
+            if (!isNaN(lat) && !isNaN(lng)) {
+              addMarkerToMap(lat, lng, item);
+            }
+          } 
+          else if (location.trim() !== "") {
+            fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(location))
+              .then(response => response.json())
+              .then(data => {
+                if (data && data.length > 0) {
+                  var lat = parseFloat(data[0].lat);
+                  var lng = parseFloat(data[0].lon);
+                  addMarkerToMap(lat, lng, item);
+                }
+              })
+              .catch(err => console.error("ジオコーディングエラー:", err));
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html>

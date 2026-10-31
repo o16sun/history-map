@@ -1,190 +1,138 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>歴史風景マップ</title>
-  <!-- LeafletのCSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <style>
-    html, body, #map {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-    }
-    .popup-img {
-      width: 100%;
-      max-width: 220px;
-      height: auto;
-      margin-top: 8px;
-      border-radius: 6px;
-      object-fit: cover;
-    }
-    /* 右上に固定する投稿ボタンのデザイン */
-    .post-btn-container {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      z-index: 1000;
-    }
-    .post-btn {
-      display: inline-block;
-      padding: 10px 18px;
-      background-color: #1a73e8;
-      color: #ffffff;
-      font-weight: bold;
-      text-decoration: none;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      font-size: 14px;
-      transition: background-color 0.2s;
-    }
-    .post-btn:hover {
-      background-color: #1557b0;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>歴史風景マップ</title>
+    <!-- Leaflet@CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        html, body, #map {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .popup-img {
+            width: 100%;
+            max-width: 220px;
+            height: auto;
+            margin-top: 8px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+        .post-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: inline-block;
+            padding: 10px 18px;
+            background-color: #1a73e8;
+            color: #ffffff;
+            font-weight: bold;
+            text-decoration: none;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        .post-btn:hover {
+            background-color: #1557b0;
+        }
+    </style>
 </head>
 <body>
 
-  <!-- 右上の投稿ボタン（正しいGoogleフォームのURLを設定済み） -->
-  <div class="post-btn-container">
-    <a href="https://docs.google.com/forms/d/1Hji9Jq7ojxjs_rsOl4nEFzBXEa5TgXJlUqO4XMMwDsM/viewform" target="_blank" class="post-btn">＋ 投稿する</a>
-  </div>
+    <!-- 右上の投稿ボタン（あなたのGoogleフォームのURL） -->
+    <div class="post-btn-container">
+        <a href="https://docs.google.com/forms/d/1Hji9Jq7ojxjs_rsO14nEFZBXEa5TgXJ1UQ04XMMwDsM/viewform" target="_blank" class="post-btn">投稿する</a>
+    </div>
 
-  <!-- マップ表示エリア -->
-  <div id="map"></div>
+    <!-- マップ表示エリア -->
+    <div id="map"></div>
 
-  <!-- JSライブラリ -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <!-- JSライブラリ（Leaflet & PapaParse） -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script>
+        // 1. マップの初期化（日本全体を表示）
+        var map = L.map('map').setView([36.5, 137.5], 5);
 
-  <script>
-    // 1. マップの初期化（日本全体を表示）
-    var map = L.map('map').setView([36.5, 137.5], 5);
+        // 背景地図 (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
 
-    // 背景地図（OpenStreetMap）
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    // 2. 埋め込みサンプルデータ
-    var sampleLocations = [
-      {
-        title: "二条城",
-        era: "1603年（江戸時代初期）",
-        description: "徳川家康が造営した城郭。大政奉還の舞台としても知られる江戸時代の重要歴史スポット。",
-        author: "サンプル",
-        location: "35.0142,135.7482",
-        imgUrl: "nijyoujyou.jpg"
-      },
-      {
-        title: "東京タワー",
-        era: "1958年（昭和33年）",
-        description: "昭和の高度経済成長期を象徴する電波塔。東京のシンボルとして親しまれています。",
-        author: "サンプル",
-        location: "35.6586,139.7454",
-        imgUrl: "https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=500&auto=format&fit=crop"
-      },
-      {
-        title: "大阪万博記念公園",
-        era: "1970年（昭和45年）",
-        description: "日本万国博覧会（大阪万博）の跡地。岡本太郎デザインの「太陽の塔」が今も残るスポット。",
-        author: "サンプル",
-        location: "34.8105,135.5323",
-        imgUrl: "banpaku.jpg"
-      },
-      {
-        title: "道後温泉本館",
-        era: "1894年（明治27年）",
-        description: "愛媛県松山市にある木造三層楼の浴場。明治時代の木造建築美が残る名所。",
-        author: "サンプル",
-        location: "33.8520,132.7858",
-        imgUrl: "dougoonsen.jpg"
-      },
-      {
-        title: "札幌市時計台",
-        era: "1878年（明治11年）",
-        description: "旧札幌農学校演武場として建てられた、明治の開拓期を象徴する歴史的建造物。",
-        author: "サンプル",
-        location: "43.0625,141.3536",
-        imgUrl: "tokeidai.jpg"
-      }
-    ];
-
-    // 3. 共通のピン作成・ポップアップ生成関数
-    function addMarkerToMap(lat, lng, item) {
-      var popupContent = "<b>" + item.title + "</b>";
-      if (item.era) {
-        popupContent += " <small>(" + item.era + ")</small>";
-      }
-      popupContent += "<br><br>" + item.description;
-
-      if (item.imgUrl) {
-        popupContent += "<br><img src='" + item.imgUrl + "' class='popup-img' alt='" + item.title + "'>";
-      }
-
-      if (item.author) {
-        popupContent += "<br><br><small>投稿者: " + item.author + "</small>";
-      }
-
-      L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
-    }
-
-    // サンプルデータの描画
-    sampleLocations.forEach(function(item) {
-      if (item.location && item.location.includes(',')) {
-        var parts = item.location.split(',');
-        var lat = parseFloat(parts[0].trim());
-        var lng = parseFloat(parts[1].trim());
-        if (!isNaN(lat) && !isNaN(lng)) {
-          addMarkerToMap(lat, lng, item);
-        }
-      }
-    });
-
-    // 4. Googleスプレッドシート（CSV）からのデータ自動読み込み
-    var sheetCsvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQgpsS1Bggs0hblnOhKezioWWcFdlEUHTM1qosNRlrFEZdWbnGrnhgdlgw4x74OlwPXXQs7T70ADmyG/pub?output=csv";
-
-    Papa.parse(sheetCsvUrl, {
-      download: true,
-      header: true,
-      complete: function(results) {
-        var data = results.data;
-        data.forEach(function(row) {
-          // 掲載許可が「OK」のデータ（または特に制限なく全て表示する場合）
-          var item = {
-            title: row["場所の名称（例: 江戸城跡 など）"] || row["スポット名"] || row["タイトル"] || "無題",
-            era: row["時代・年（例: 1603年、江戸時代 など）"] || row["年代"] || row["時代"] || "",
-            description: row["説明・歴史（メモ）"] || row["説明"] || row["コメント"] || "",
-            author: row["投稿者名"] || "匿名",
-            imgUrl: row["画像（大事な思い出の写真）"] || row["画像URL"] || row["写真"] || ""
-          };
-
-          var location = row["位置情報"] || row["住所"] || row["場所"] || "";
-
-          if (location.includes(',')) {
-            var parts = location.split(',');
-            var lat = parseFloat(parts[0].trim());
-            var lng = parseFloat(parts[1].trim());
-            if (!isNaN(lat) && !isNaN(lng)) {
-              addMarkerToMap(lat, lng, item);
+        // 3. 共通のピン作成・ポップアップ生成関数
+        function addMarkerToMap(title, era, description, author, locationStr, imgUrl) {
+            var popupContent = "<b>" + title + "</b>";
+            if (era) {
+                popupContent += "<br><small>(" + era + ")</small>";
             }
-          } 
-          else if (location.trim() !== "") {
-            fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(location))
-              .then(response => response.json())
-              .then(data => {
-                if (data && data.length > 0) {
-                  var lat = parseFloat(data[0].lat);
-                  var lng = parseFloat(data[0].lon);
-                  addMarkerToMap(lat, lng, item);
+            if (description) {
+                popupContent += "<br><br>" + description;
+            }
+            if (imgUrl) {
+                popupContent += "<br><img src='" + imgUrl + "' class='popup-img' alt='" + title + "'>";
+            }
+            if (author) {
+                popupContent += "<br><br><small>投稿者: " + author + "</small>";
+            }
+
+            // 緯度・経度の形式 ("35.0142,135.7482") の場合
+            if (locationStr.includes(',')) {
+                var parts = locationStr.split(',');
+                var lat = parseFloat(parts[0].trim());
+                var lng = parseFloat(parts[1].trim());
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
                 }
-              })
-              .catch(err => console.error("ジオコーディングエラー:", err));
-          }
+            } 
+            // 住所 ("京都市東山区祇園町") の場合（Nominatimジオコーディング）
+            else if (locationStr.trim() !== "") {
+                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(locationStr))
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            var lat = parseFloat(data[0].lat);
+                            var lng = parseFloat(data[0].lon);
+                            L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+                        }
+                    })
+                    .catch(err => console.error("ジオコーディングエラー:", err));
+            }
+        }
+
+        // 2. GoogleスプレッドシートのCSVからデータを読み込んでピンを動的に配置
+        // ※あなたのスプレッドシートのCSV公開URLをここに設定済み
+        var csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQgpsS1BqqS0hblnOHkeziOWWCfDlEUHTM1qosNRlrFEZdWbnGrnhgdlgw4x74OlwPXqS7T7OAdmyG/pub?output=csv';
+
+        Papa.parse(csvUrl, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                var data = results.data;
+                
+                data.forEach(function(item) {
+                    // Googleフォームの項目名に対応するデータを取得
+                    var title = item['タイトル（題名）'] || '';
+                    var location = item['住所または座標'] || '';
+                    var era = item['「時代・年代」'] || '';
+                    var description = item['説明・歴史（メモ）'] || '';
+                    var author = item['投稿者名'] || '';
+                    var imgUrl = item['画像 (大事な思い出の風景写真)'] || '';
+                    var status = item['掲載許可'] || '';
+
+                    // 「ng」でなく、かつ場所が空欄でなければマップにピンを表示
+                    if (status.trim().toLowerCase() !== 'ng' && location.trim() !== '') {
+                        addMarkerToMap(title, era, description, author, location, imgUrl);
+                    }
+                });
+            },
+            error: function(err) {
+                console.error("CSVの読み込みに失敗しました:", err);
+            }
         });
-      }
-    });
-  </script>
+    </script>
 </body>
 </html>

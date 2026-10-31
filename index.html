@@ -59,36 +59,27 @@
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // Googleドライブの多様なURL形式からファイルIDを確実に抜き出してプレビュー用URLに変換する関数
+        // GoogleドライブのURLから画像を表示可能な形式に変換する関数
         function convertDriveUrl(url) {
             if (!url) return '';
             var fileId = '';
 
-            // 1. /d/ から始まるID
             var match1 = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-            if (match1 && match1[1]) {
-                fileId = match1[1];
-            }
-            // 2. ?id= または &id= から始まるID
+            if (match1 && match1[1]) fileId = match1[1];
+
             if (!fileId) {
                 var match2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-                if (match2 && match2[1]) {
-                    fileId = match2[1];
-                }
+                if (match2 && match2[1]) fileId = match2[1];
             }
-            // 3. open?id= などの形式
+
             if (!fileId) {
                 var match3 = url.match(/open\?id=([a-zA-Z0-9_-]+)/);
-                if (match3 && match3[1]) {
-                    fileId = match3[1];
-                }
+                if (match3 && match3[1]) fileId = match3[1];
             }
 
             if (fileId) {
                 return 'https://drive.google.com/uc?export=view&id=' + fileId;
             }
-            
-            // どれにも当てはまらない場合は元のURLをそのまま返す
             return url;
         }
 
@@ -127,24 +118,29 @@
 
         var csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQgpsS1Bqgs0hbln0HkezioWWcFdlEUHTM1qosNRlrFEZdWbnGrnhgdIgw4x74OIwPXxQs7T70ADmyG/pub?output=csv';
 
+        // ヘッダー名に依存せず、列の順番で確実にデータを取得する方式に変更
         Papa.parse(csvUrl, {
             download: true,
-            header: true,
+            header: false,
             complete: function(results) {
-                var data = results.data;
-                data.forEach(function(item) {
-                    var title = item['タイトル（題名）'] || '';
-                    var location = item['住所または座標'] || item['「住所または座標」'] || ''; 
-                    var era = item['「時代・年代」'] || item['時代・年代'] || '';
-                    var description = item['説明・歴史（メモ）'] || '';
-                    var author = item['投稿者名'] || '';
-                    var imgUrl = item['画像 (大事な思い出の風景写真)'] || '';
-                    var status = item['掲載許可'] || '';
+                var rows = results.data;
+                // 1行目は見出しなので 2行目(index 1)からループ
+                for (var i = 1; i < rows.length; i++) {
+                    var item = rows[i];
+                    if (!item || item.length < 8) continue;
+
+                    var title = item[1] || '';       // B列: タイトル
+                    var location = item[2] || '';    // C列: 住所または座標
+                    var era = item[3] || '';         // D列: 時代・年代
+                    var description = item[4] || ''; // E列: 説明・歴史
+                    var imgUrl = item[5] || '';      // F列: 画像
+                    var author = item[6] || '';      // G列: 投稿者名
+                    var status = item[7] || '';      // H列: 掲載許可
 
                     if (status.trim().toLowerCase() !== 'ng' && location.trim() !== '') {
                         addMarkerToMap(title, era, description, author, location, imgUrl);
                     }
-                });
+                }
             }
         });
     </script>

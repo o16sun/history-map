@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>歴史風景マップ</title>
-    <!-- Leaflet@CSS -->
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         html, body, #map {
@@ -20,11 +20,13 @@
             border-radius: 6px;
             object-fit: cover;
         }
-        .post-btn {
+        .post-btn-container {
             position: absolute;
             top: 20px;
             right: 20px;
             z-index: 1000;
+        }
+        .post-btn {
             display: inline-block;
             padding: 10px 18px;
             background-color: #1a73e8;
@@ -43,96 +45,5 @@
 </head>
 <body>
 
-    <!-- 右上の投稿ボタン（あなたのGoogleフォームのURL） -->
+    <!-- 右上の投稿ボタン -->
     <div class="post-btn-container">
-        <a href="https://docs.google.com/forms/d/1Hji9Jq7ojxjs_rsO14nEFZBXEa5TgXJ1UQ04XMMwDsM/viewform" target="_blank" class="post-btn">投稿する</a>
-    </div>
-
-    <!-- マップ表示エリア -->
-    <div id="map"></div>
-
-    <!-- JSライブラリ（Leaflet & PapaParse） -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <script>
-        // 1. マップの初期化（日本全体を表示）
-        var map = L.map('map').setView([36.5, 137.5], 5);
-
-        // 背景地図 (OpenStreetMap)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-
-        // 3. 共通のピン作成・ポップアップ生成関数
-        function addMarkerToMap(title, era, description, author, locationStr, imgUrl) {
-            var popupContent = "<b>" + title + "</b>";
-            if (era) {
-                popupContent += "<br><small>(" + era + ")</small>";
-            }
-            if (description) {
-                popupContent += "<br><br>" + description;
-            }
-            if (imgUrl) {
-                popupContent += "<br><img src='" + imgUrl + "' class='popup-img' alt='" + title + "'>";
-            }
-            if (author) {
-                popupContent += "<br><br><small>投稿者: " + author + "</small>";
-            }
-
-            // 緯度・経度の形式 ("35.0142,135.7482") の場合
-            if (locationStr.includes(',')) {
-                var parts = locationStr.split(',');
-                var lat = parseFloat(parts[0].trim());
-                var lng = parseFloat(parts[1].trim());
-                if (!isNaN(lat) && !isNaN(lng)) {
-                    L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
-                }
-            } 
-            // 住所 ("京都市東山区祇園町") の場合（Nominatimジオコーディング）
-            else if (locationStr.trim() !== "") {
-                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(locationStr))
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data && data.length > 0) {
-                            var lat = parseFloat(data[0].lat);
-                            var lng = parseFloat(data[0].lon);
-                            L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
-                        }
-                    })
-                    .catch(err => console.error("ジオコーディングエラー:", err));
-            }
-        }
-
-        // 2. GoogleスプレッドシートのCSVからデータを読み込んでピンを動的に配置
-        // ※あなたのスプレッドシートのCSV公開URLをここに設定済み
-        var csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQgpsS1Bqgs0hbln0HkezioWWcFdlEUHTM1qosNRlrFEZdWbnGrnhgdIgw4x74OIwPXxQs7T70ADmyG/pub?output=csv;
-
-        Papa.parse(csvUrl, {
-            download: true,
-            header: true,
-            complete: function(results) {
-                var data = results.data;
-                
-                data.forEach(function(item) {
-                    // Googleフォームの項目名に対応するデータを取得
-                    var title = item['タイトル（題名）'] || '';
-                    var location = item['住所または座標'] || '';
-                    var era = item['「時代・年代」'] || '';
-                    var description = item['説明・歴史（メモ）'] || '';
-                    var author = item['投稿者名'] || '';
-                    var imgUrl = item['画像 (大事な思い出の風景写真)'] || '';
-                    var status = item['掲載許可'] || '';
-
-                    // 「ng」でなく、かつ場所が空欄でなければマップにピンを表示
-                    if (status.trim().toLowerCase() !== 'ng' && location.trim() !== '') {
-                        addMarkerToMap(title, era, description, author, location, imgUrl);
-                    }
-                });
-            },
-            error: function(err) {
-                console.error("CSVの読み込みに失敗しました:", err);
-            }
-        });
-    </script>
-</body>
-</html>

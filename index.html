@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>歴史風景マップ</title>
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         html, body, #map {
@@ -27,7 +26,6 @@
             right: 15px;
             z-index: 1000;
         }
-        /* スマホでも押しやすい大きめサイズ ＆ target="_blank"で別タブ表示 */
         .post-btn {
             display: inline-block;
             padding: 12px 22px;
@@ -38,7 +36,6 @@
             border-radius: 8px;
             box-shadow: 0 3px 6px rgba(0,0,0,0.3);
             font-size: 16px;
-            transition: background-color 0.2s;
         }
         .post-btn:hover {
             background-color: #1557b0;
@@ -47,6 +44,71 @@
 </head>
 <body>
 
-    <!-- 右上の投稿ボタン（別タブでフォームを開く） -->
     <div class="post-btn-container">
-        <a href="
+        <a href="https://docs.google.com/forms/d/1Hji9Jq7ojxjs_rsO14nEFZBXEa5TgXJ1UQ04XMMwDsM/viewform" target="_blank" class="post-btn">投稿する</a>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script>
+        var map = L.map('map').setView([36.5, 137.5], 5);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        function addMarkerToMap(title, era, description, author, locationStr, imgUrl) {
+            var popupContent = "<b>" + title + "</b>";
+            if (era) popupContent += "<br><small>(" + era + ")</small>";
+            if (description) popupContent += "<br><br>" + description;
+            if (imgUrl) popupContent += "<br><img src='" + imgUrl + "' class='popup-img' alt='" + title + "'>";
+            if (author) popupContent += "<br><br><small>投稿者: " + author + "</small>";
+
+            if (locationStr.indexOf(',') !== -1) {
+                var parts = locationStr.split(',');
+                var lat = parseFloat(parts[0].trim());
+                var lng = parseFloat(parts[1].trim());
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+                }
+            } else if (locationStr.trim() !== "") {
+                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(locationStr))
+                    .then(function(res){ return res.json(); })
+                    .then(function(data){
+                        if (data && data.length > 0) {
+                            var lat = parseFloat(data[0].lat);
+                            var lng = parseFloat(data[0].lon);
+                            L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+                        }
+                    })
+                    .catch(function(err){ console.error(err); });
+            }
+        }
+
+        var csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQgpsS1Bqgs0hbln0HkezioWWcFdlEUHTM1qosNRlrFEZdWbnGrnhgdIgw4x74OIwPXxQs7T70ADmyG/pub?output=csv';
+
+        Papa.parse(csvUrl, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                var data = results.data;
+                data.forEach(function(item) {
+                    var title = item['タイトル（題名）'] || '';
+                    var location = item['住所または座標'] || '';
+                    var era = item['「時代・年代」'] || '';
+                    var description = item['説明・歴史（メモ）'] || '';
+                    var author = item['投稿者名'] || '';
+                    var imgUrl = item['画像 (大事な思い出の風景写真)'] || '';
+                    var status = item['掲載許可'] || '';
+
+                    if (status.trim().toLowerCase() !== 'ng' && location.trim() !== '') {
+                        addMarkerToMap(title, era, description, author, location, imgUrl);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

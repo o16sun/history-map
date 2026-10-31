@@ -45,7 +45,6 @@
 <body>
 
     <div class="post-btn-container">
-        <!-- 長い方の公開用GoogleフォームURLをここに設定します -->
         <a href="https://docs.google.com/forms/d/e/1FAIpQLSfDAu2P0MA6PYdFz-dX_sAW-VX24rxKbVaoqwms1dB1iRFxkA/viewform?usp=header" target="_blank" class="post-btn">投稿する</a>
     </div>
 
@@ -60,11 +59,33 @@
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
+        // GoogleドライブのURLを直接表示可能な形式に変換する関数
+        function convertDriveUrl(url) {
+            if (!url) return '';
+            // file/d/XXXXX/view などの形式からファイルIDを抽出
+            var match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            if (match && match[1]) {
+                // サムネイル表示用（または直接表示用）のURLに変換
+                return 'https://drive.google.com/uc?export=view&id=' + match[1];
+            }
+            // id=XXXXX の形式の場合
+            var matchId = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (matchId && matchId[1]) {
+                return 'https://drive.google.com/uc?export=view&id=' + matchId[1];
+            }
+            return url;
+        }
+
         function addMarkerToMap(title, era, description, author, locationStr, imgUrl) {
             var popupContent = "<b>" + title + "</b>";
             if (era) popupContent += "<br><small>(" + era + ")</small>";
             if (description) popupContent += "<br><br>" + description;
-            if (imgUrl) popupContent += "<br><img src='" + imgUrl + "' class='popup-img' alt='" + title + "'>";
+            
+            var directImgUrl = convertDriveUrl(imgUrl);
+            if (directImgUrl) {
+                popupContent += "<br><img src='" + directImgUrl + "' class='popup-img' alt='" + title + "'>";
+            }
+            
             if (author) popupContent += "<br><br><small>投稿者: " + author + "</small>";
 
             if (locationStr.indexOf(',') !== -1) {
@@ -97,8 +118,8 @@
                 var data = results.data;
                 data.forEach(function(item) {
                     var title = item['タイトル（題名）'] || '';
-                    var location = item['住所または座標'] || '';
-                    var era = item['「時代・年代」'] || '';
+                    var location = item['住所または座標'] || item['「住所または座標」'] || ''; 
+                    var era = item['「時代・年代」'] || item['時代・年代'] || '';
                     var description = item['説明・歴史（メモ）'] || '';
                     var author = item['投稿者名'] || '';
                     var imgUrl = item['画像 (大事な思い出の風景写真)'] || '';

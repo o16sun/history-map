@@ -47,3 +47,83 @@
 
     <!-- 右上の投稿ボタン -->
     <div class="post-btn-container">
+        <a href="https://docs.google.com/forms/d/1Hji9Jq7ojxjs_rsO14nEFZBXEa5TgXJ1UQ04XMMwDsM/viewform" target="_blank" class="post-btn">投稿する</a>
+    </div>
+
+    <!-- マップ表示エリア -->
+    <div id="map"></div>
+
+    <!-- JSライブラリ -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script>
+        // 1. マップの初期化（日本全体を表示）
+        var map = L.map('map').setView([36.5, 137.5], 5);
+
+        // 背景地図 (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // 2. ピンとポップアップの追加処理
+        function addMarkerToMap(title, era, description, author, locationStr, imgUrl) {
+            var popupContent = "<b>" + title + "</b>";
+            if (era) popupContent += "<br><small>(" + era + ")</small>";
+            if (description) popupContent += "<br><br>" + description;
+            if (imgUrl) popupContent += "<br><img src='" + imgUrl + "' class='popup-img' alt='" + title + "'>";
+            if (author) popupContent += "<br><br><small>投稿者: " + author + "</small>";
+
+            // 座標（例: 35.0142, 135.7482）の場合
+            if (locationStr.includes(',')) {
+                var parts = locationStr.split(',');
+                var lat = parseFloat(parts[0].trim());
+                var lng = parseFloat(parts[1].trim());
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+                }
+            } 
+            // 住所文字列の場合（Geocodingで緯度経度に自動変換）
+            else if (locationStr.trim() !== "") {
+                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(locationStr))
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            var lat = parseFloat(data[0].lat);
+                            var lng = parseFloat(data[0].lon);
+                            L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+                        }
+                    })
+                    .catch(err => console.error("住所変換エラー:", err));
+            }
+        }
+
+        // 3. スプレッドシートCSVデータの自動読み込み
+        var csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQgpsS1Bqgs0hbln0HkezioWWcFdlEUHTM1qosNRlrFEZdWbnGrnhgdIgw4x74OIwPXxQs7T70ADmyG/pub?output=csv';
+
+        Papa.parse(csvUrl, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                var data = results.data;
+                data.forEach(function(item) {
+                    var title = item['タイトル（題名）'] || '';
+                    var location = item['住所または座標'] || '';
+                    var era = item['「時代・年代」'] || '';
+                    var description = item['説明・歴史（メモ）'] || '';
+                    var author = item['投稿者名'] || '';
+                    var imgUrl = item['画像 (大事な思い出の風景写真)'] || '';
+                    var status = item['掲載許可'] || '';
+
+                    // 掲載許可が「ng」以外のデータのみマップ上にピンを表示
+                    if (status.trim().toLowerCase() !== 'ng' && location.trim() !== '') {
+                        addMarkerToMap(title, era, description, author, location, imgUrl);
+                    }
+                });
+            },
+            error: function(err) {
+                console.error("CSVデータの読み込みエラー:", err);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -59,7 +59,7 @@
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // GoogleドライブのURLから画像を表示可能な形式に変換する関数
+        // GoogleドライブのURLから画像として確実に出力できる直リンク形式に変換する関数
         function convertDriveUrl(url) {
             if (!url) return '';
             var fileId = '';
@@ -78,7 +78,8 @@
             }
 
             if (fileId) {
-                return 'https://drive.google.com/uc?export=view&id=' + fileId;
+                // 画像を直接表示できるGoogleのusercontent形式に変換
+                return 'https://lh3.googleusercontent.com/d/' + fileId;
             }
             return url;
         }
@@ -118,13 +119,11 @@
 
         var csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQgpsS1Bqgs0hbln0HkezioWWcFdlEUHTM1qosNRlrFEZdWbnGrnhgdIgw4x74OIwPXxQs7T70ADmyG/pub?output=csv';
 
-        // ヘッダー名に依存せず、列の順番で確実にデータを取得する方式に変更
         Papa.parse(csvUrl, {
             download: true,
             header: false,
             complete: function(results) {
                 var rows = results.data;
-                // 1行目は見出しなので 2行目(index 1)からループ
                 for (var i = 1; i < rows.length; i++) {
                     var item = rows[i];
                     if (!item || item.length < 8) continue;

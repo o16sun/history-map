@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- 最高効果のSEOタイトル＆メタタグ -->
-    <title>【公式】歴史風景マップアーカイブ | 昔の写真・昭和レトロ・地域の歴史写真投稿マップ</title>
-    <meta name="description" content="全国の昭和レトロな街並み、昔の駅前、伝統行事や歴史的建造物の古写真を位置情報とともに記録・閲覧できる参加型オープンアーカイブ。">
-    <meta name="keywords" content="歴史マップ,古写真,昭和レトロ,昔の写真,歴史風景,街歩き,地域アーカイブ,写真投稿,歴史的建造物,思い出の風景">
+    <title>【公式】歴史風景マップアーカイブ | 江戸時代から令和までの古写真・昭和レトロ投稿マップ</title>
+    <meta name="description" content="全国の江戸時代、明治、大正、昭和レトロな街並み、昔の駅前や歴史的建造物の古写真を位置情報とともに記録・閲覧できる参加型オープンアーカイブ。">
+    <meta name="keywords" content="歴史マップ,古写真,昭和レトロ,江戸時代,明治,昔の写真,歴史風景,街歩き,地域アーカイブ,写真投稿">
     <meta name="robots" content="index, follow">
 
     <!-- SNSシェア時（OGP）の表示最適化 -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="歴史風景マップアーカイブ | あなたの街の昔の写真・思い出を投稿">
-    <meta property="og:description" content="全国の昔の風景や昭和レトロな街並みを地図上で閲覧・投稿できるオープンマップ。">
+    <meta property="og:title" content="歴史風景マップアーカイブ | 江戸時代〜令和の古写真・思い出を投稿">
+    <meta property="og:description" content="江戸時代から令和まで、全国の昔の風景や昭和レトロな街並みを地図上で閲覧・投稿できるオープンマップ。">
     <meta property="og:site_name" content="歴史風景マップ">
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -28,7 +28,6 @@
             height: 100%;
             overflow: hidden;
         }
-        /* 地図を表示するエリアの高さを100vh（画面全体）に確実に固定 */
         #map {
             width: 100%;
             height: 100vh;
@@ -90,7 +89,7 @@
             background-color: #e68a00;
         }
 
-        /* モーダル（寄付案内ポップアップ） */
+        /* モーダル共通スタイル */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -105,11 +104,13 @@
             background: #fff;
             padding: 24px;
             border-radius: 12px;
-            max-width: 420px;
+            max-width: 440px;
             width: 90%;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             text-align: left;
             position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         .modal-close {
             position: absolute;
@@ -162,6 +163,20 @@
 </head>
 <body>
 
+    <!-- 初回訪問時のお出迎え（説明）ポップアップ -->
+    <div id="welcomeModal" class="modal-overlay" style="display: flex;">
+        <div class="modal-content" style="text-align: center;">
+            <h3 class="modal-title" style="font-size: 20px; color: #1a73e8;">🗺️ 歴史風景マップへようこそ！</h3>
+            <div class="modal-body" style="text-align: left; margin: 15px 0;">
+                <p>このマップは、日本各地の<strong>江戸時代から令和まで</strong>の街並みや歴史的建造物、思い出の風景を位置情報とともに記録・閲覧できる参加型オープンアーカイブです。</p>
+                <p>🌸 <strong>どんな古い写真でも大歓迎：</strong>「江戸時代・明治の古絵図」から「昭和レトロな街並み」「令和の現在の姿」まで、同じ場所の移り変わりや1点の思い出写真も大歓迎です！</p>
+                <p>📍 <strong>使い方：</strong>ピンをタップすると写真やエピソードが見られます。（スマホでは画像をタップすると拡大できます）<br>
+                   📸 <strong>投稿：</strong>右上の「投稿する」ボタンから、あなたの写真もぜひお寄せください！</p>
+            </div>
+            <button onclick="closeWelcomeModal()" style="background-color: #1a73e8; color: white; border: none; padding: 12px 24px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 15px;">マップを見る</button>
+        </div>
+    </div>
+
     <!-- 右上アクションボタンエリア（投稿 & 寄付・支援） -->
     <div class="top-btn-container">
         <a href="javascript:void(0)" onclick="openDonateModal()" class="btn-common donate-btn">☕ 運営を応援</a>
@@ -198,6 +213,11 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
+
+        // 初回ウェルカムモーダルを閉じる処理
+        function closeWelcomeModal() {
+            document.getElementById('welcomeModal').style.display = 'none';
+        }
 
         // GoogleドライブのURLから画像を表示可能な形式に変換する関数
         function convertDriveUrl(url) {
@@ -287,6 +307,7 @@
             }
         });
 
+        // 寄付モーダルの開閉処理
         function openDonateModal() {
             document.getElementById('donateModal').style.display = 'flex';
         }

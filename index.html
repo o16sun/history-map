@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- 最高効果のSEOタイトル＆メタタグ（地域・昭和レトロ・古写真キーワード網羅） -->
-    <title>【公式】歴史風景マップアーカイブ | 昔の写真・江戸大正明治昭和レトロ・地域の歴史写真投稿マップ</title>
-    <meta name="description" content="全国の江戸大正明治昭和平成令和レトロな街並み、昔の駅前、伝統行事や歴史的建造物の古写真を位置情報とともに記録・閲覧できる参加型オープンアーカイブ。思い出の写真や地域の歴史風景を投稿して次世代へ継承しよう。">
+    <!-- 最高効果のSEOタイトル＆メタタグ -->
+    <title>【公式】歴史風景マップアーカイブ | 昔の写真・昭和レトロ・地域の歴史写真投稿マップ</title>
+    <meta name="description" content="全国の昭和レトロな街並み、昔の駅前、伝統行事や歴史的建造物の古写真を位置情報とともに記録・閲覧できる参加型オープンアーカイブ。">
     <meta name="keywords" content="歴史マップ,古写真,昭和レトロ,昔の写真,歴史風景,街歩き,地域アーカイブ,写真投稿,歴史的建造物,思い出の風景">
     <meta name="robots" content="index, follow">
 
@@ -18,11 +18,21 @@
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        html, body, #map {
+        * {
+            box-sizing: border-box;
+        }
+        html, body {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
+            overflow: hidden;
+        }
+        /* 地図を表示するエリアの高さを100vh（画面全体）に確実に固定 */
+        #map {
+            width: 100%;
+            height: 100vh;
+            z-index: 1;
         }
         .popup-img {
             width: 100%;
@@ -168,4 +178,124 @@
             <h3 class="modal-title">歴史風景マップへのご支援のお願い</h3>
             <div class="modal-body">
                 <p>いつも「歴史風景マップ」をご利用いただきありがとうございます！</p>
-                <p>本サービスは個人で企画・運営を行っており、
+                <p>本サービスは個人で企画・運営を行っており、皆様からご支援いただいた資金は以下の目的で大切に活用させていただきます。</p>
+                <ul>
+                    <li>独自ドメイン（<code>.com</code> など）の取得・維持費</li>
+                    <li>サーバー・地図配信システムの安定稼働費</li>
+                    <li>マップ機能拡張・学術利用に向けたシステム改善</li>
+                </ul>
+                <p>温かいご支援・応援メッセージをいただけますと幸いです。</p>
+                <a href="https://ofuse.me/016sun" target="_blank" class="support-link-btn">OFUSEで応援・寄付を送る</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script>
+        var map = L.map('map').setView([36.5, 137.5], 5);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // GoogleドライブのURLから画像を表示可能な形式に変換する関数
+        function convertDriveUrl(url) {
+            if (!url) return '';
+            var fileId = '';
+
+            var match1 = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            if (match1 && match1[1]) fileId = match1[1];
+
+            if (!fileId) {
+                var match2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+                if (match2 && match2[1]) fileId = match2[1];
+            }
+
+            if (!fileId) {
+                var match3 = url.match(/open\?id=([a-zA-Z0-9_-]+)/);
+                if (match3 && match3[1]) fileId = match3[1];
+            }
+
+            if (fileId) {
+                return 'https://lh3.googleusercontent.com/d/' + fileId;
+            }
+            return url;
+        }
+
+        function addMarkerToMap(title, era, description, author, locationStr, imgUrl) {
+            var popupContent = "<b>" + title + "</b>";
+            if (era) popupContent += "<br><small>(" + era + ")</small>";
+            
+            if (description && description.trim() !== "") {
+                popupContent += "<br><div style='margin-top: 6px; font-size: 14px;'>" + description + "</div>";
+            }
+            
+            var directImgUrl = convertDriveUrl(imgUrl);
+            if (directImgUrl) {
+                popupContent += "<br><a href='" + directImgUrl + "' target='_blank' title='タップして画像を拡大'><img src='" + directImgUrl + "' class='popup-img' alt='" + title + "'></a>";
+            }
+            
+            if (author) popupContent += "<br><br><small>投稿者: " + author + "</small>";
+
+            if (locationStr.indexOf(',') !== -1) {
+                var parts = locationStr.split(',');
+                var lat = parseFloat(parts[0].trim());
+                var lng = parseFloat(parts[1].trim());
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+                }
+            } else if (locationStr.trim() !== "") {
+                var searchUrl = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(locationStr) + '&accept-language=en,ja';
+                
+                fetch(searchUrl)
+                    .then(function(res){ return res.json(); })
+                    .then(function(data){
+                        if (data && data.length > 0) {
+                            var lat = parseFloat(data[0].lat);
+                            var lng = parseFloat(data[0].lon);
+                            L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+                        }
+                    })
+                    .catch(function(err){ console.error(err); });
+            }
+        }
+
+        var csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQgpsS1Bqgs0hbln0HkezioWWcFdlEUHTM1qosNRlrFEZdWbnGrnhgdIgw4x74OIwPXxQs7T70ADmyG/pub?output=csv';
+
+        Papa.parse(csvUrl, {
+            download: true,
+            header: false,
+            complete: function(results) {
+                var rows = results.data;
+                for (var i = 1; i < rows.length; i++) {
+                    var item = rows[i];
+                    if (!item || item.length < 8) continue;
+
+                    var title = item[1] || '';       // B列: タイトル
+                    var location = item[2] || '';    // C列: 住所または座標
+                    var era = item[3] || '';         // D列: 時代・年代
+                    var description = item[4] || ''; // E列: 説明・歴史
+                    var imgUrl = item[5] || '';      // F列: 画像
+                    var author = item[6] || '';      // G列: 投稿者名
+                    var status = item[7] || '';      // H列: 掲載許可
+
+                    if (status.trim().toLowerCase() !== 'ng' && location.trim() !== '') {
+                        addMarkerToMap(title, era, description, author, location, imgUrl);
+                    }
+                }
+            }
+        });
+
+        function openDonateModal() {
+            document.getElementById('donateModal').style.display = 'flex';
+        }
+
+        function closeDonateModal(event) {
+            if (!event || event.target === document.getElementById('donateModal') || event.target.classList.contains('modal-close')) {
+                document.getElementById('donateModal').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

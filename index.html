@@ -3,7 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>歴史風景マップ</title>
+
+    <!-- 最高効果のSEOタイトル＆メタタグ（地域・昭和レトロ・古写真キーワード網羅） -->
+    <title>【公式】歴史風景マップアーカイブ | 昔の写真・江戸大正明治昭和レトロ・地域の歴史写真投稿マップ</title>
+    <meta name="description" content="全国の江戸大正明治昭和平成令和レトロな街並み、昔の駅前、伝統行事や歴史的建造物の古写真を位置情報とともに記録・閲覧できる参加型オープンアーカイブ。思い出の写真や地域の歴史風景を投稿して次世代へ継承しよう。">
+    <meta name="keywords" content="歴史マップ,古写真,昭和レトロ,昔の写真,歴史風景,街歩き,地域アーカイブ,写真投稿,歴史的建造物,思い出の風景">
+    <meta name="robots" content="index, follow">
+
+    <!-- SNSシェア時（OGP）の表示最適化 -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="歴史風景マップアーカイブ | あなたの街の昔の写真・思い出を投稿">
+    <meta property="og:description" content="全国の昔の風景や昭和レトロな街並みを地図上で閲覧・投稿できるオープンマップ。">
+    <meta property="og:site_name" content="歴史風景マップ">
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         html, body, #map {
@@ -25,136 +37,135 @@
         .popup-img:hover {
             opacity: 0.85;
         }
-        .post-btn-container {
+
+        /* 右上のボタンコンテナ */
+        .top-btn-container {
             position: absolute;
             top: 15px;
             right: 15px;
             z-index: 1000;
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
-        .post-btn {
+        .btn-common {
             display: inline-block;
-            padding: 12px 22px;
-            background-color: #1a73e8;
-            color: #ffffff;
+            padding: 10px 18px;
             font-weight: bold;
             text-decoration: none;
             border-radius: 8px;
             box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-            font-size: 16px;
+            font-size: 14px;
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        .btn-common:active {
+            transform: scale(0.98);
+        }
+
+        /* 投稿ボタン */
+        .post-btn {
+            background-color: #1a73e8;
+            color: #ffffff;
         }
         .post-btn:hover {
             background-color: #1557b0;
+        }
+
+        /* 寄付・支援ボタン */
+        .donate-btn {
+            background-color: #ff9800;
+            color: #ffffff;
+        }
+        .donate-btn:hover {
+            background-color: #e68a00;
+        }
+
+        /* モーダル（寄付案内ポップアップ） */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #fff;
+            padding: 24px;
+            border-radius: 12px;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            text-align: left;
+            position: relative;
+        }
+        .modal-close {
+            position: absolute;
+            top: 10px; right: 14px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #888;
+        }
+        .modal-title {
+            margin-top: 0;
+            font-size: 18px;
+            color: #333;
+        }
+        .modal-body {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+        }
+        .support-link-btn {
+            display: block;
+            width: 100%;
+            text-align: center;
+            background-color: #25d366;
+            color: white;
+            font-weight: bold;
+            padding: 12px 0;
+            margin-top: 15px;
+            border-radius: 6px;
+            text-decoration: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            transition: background-color 0.2s;
+        }
+        .support-link-btn:hover {
+            background-color: #20ba5a;
+        }
+
+        /* スマホ向け調整 */
+        @media (max-width: 600px) {
+            .top-btn-container {
+                top: 10px;
+                right: 10px;
+                gap: 6px;
+            }
+            .btn-common {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
         }
     </style>
 </head>
 <body>
 
-    <div class="post-btn-container">
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSfDAu2P0MA6PYdFz-dX_sAW-VX24rxKbVaoqwms1dB1iRFxkA/viewform?usp=header" target="_blank" class="post-btn">投稿する</a>
+    <!-- 右上アクションボタンエリア（投稿 & 寄付・支援） -->
+    <div class="top-btn-container">
+        <a href="javascript:void(0)" onclick="openDonateModal()" class="btn-common donate-btn">☕ 運営を応援</a>
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSfDAu2P0MA6PYdFz-dX_sAW-VX24rxKbVaoqwms1dB1iRFxkA/viewform?usp=header" target="_blank" class="btn-common post-btn">投稿する</a>
     </div>
 
+    <!-- 地図表示エリア -->
     <div id="map"></div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <script>
-        var map = L.map('map').setView([36.5, 137.5], 5);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
-
-        // GoogleドライブのURLから画像を表示可能な形式に変換する関数
-        function convertDriveUrl(url) {
-            if (!url) return '';
-            var fileId = '';
-
-            var match1 = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-            if (match1 && match1[1]) fileId = match1[1];
-
-            if (!fileId) {
-                var match2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-                if (match2 && match2[1]) fileId = match2[1];
-            }
-
-            if (!fileId) {
-                var match3 = url.match(/open\?id=([a-zA-Z0-9_-]+)/);
-                if (match3 && match3[1]) fileId = match3[1];
-            }
-
-            if (fileId) {
-                return 'https://lh3.googleusercontent.com/d/' + fileId;
-            }
-            return url;
-        }
-
-        function addMarkerToMap(title, era, description, author, locationStr, imgUrl) {
-            var popupContent = "<b>" + title + "</b>";
-            if (era) popupContent += "<br><small>(" + era + ")</small>";
-            
-            // 1. 説明文が確実に表示されるように修正
-            if (description && description.trim() !== "") {
-                popupContent += "<br><div style='margin-top: 6px; font-size: 14px;'>" + description + "</div>";
-            }
-            
-            var directImgUrl = convertDriveUrl(imgUrl);
-            if (directImgUrl) {
-                // 2. スマホで画像をタップすると別タブで大きく（フルサイズで）開くように修正
-                popupContent += "<br><a href='" + directImgUrl + "' target='_blank' title='タップして画像を拡大'><img src='" + directImgUrl + "' class='popup-img' alt='" + title + "'></a>";
-            }
-            
-            if (author) popupContent += "<br><br><small>投稿者: " + author + "</small>";
-
-            // 座標形式 (緯度, 経度) の場合
-            if (locationStr.indexOf(',') !== -1) {
-                var parts = locationStr.split(',');
-                var lat = parseFloat(parts[0].trim());
-                var lng = parseFloat(parts[1].trim());
-                if (!isNaN(lat) && !isNaN(lng)) {
-                    L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
-                }
-            } else if (locationStr.trim() !== "") {
-                // 3. 英語や外国語の住所でも正しく認識するように Nominatim の検索言語を自動適応・拡張
-                var searchUrl = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(locationStr) + '&accept-language=en,ja';
-                
-                fetch(searchUrl)
-                    .then(function(res){ return res.json(); })
-                    .then(function(data){
-                        if (data && data.length > 0) {
-                            var lat = parseFloat(data[0].lat);
-                            var lng = parseFloat(data[0].lon);
-                            L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
-                        }
-                    })
-                    .catch(function(err){ console.error(err); });
-            }
-        }
-
-        var csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQgpsS1Bqgs0hbln0HkezioWWcFdlEUHTM1qosNRlrFEZdWbnGrnhgdIgw4x74OIwPXxQs7T70ADmyG/pub?output=csv';
-
-        Papa.parse(csvUrl, {
-            download: true,
-            header: false,
-            complete: function(results) {
-                var rows = results.data;
-                for (var i = 1; i < rows.length; i++) {
-                    var item = rows[i];
-                    if (!item || item.length < 8) continue;
-
-                    var title = item[1] || '';       // B列: タイトル
-                    var location = item[2] || '';    // C列: 住所または座標
-                    var era = item[3] || '';         // D列: 時代・年代
-                    var description = item[4] || ''; // E列: 説明・歴史
-                    var imgUrl = item[5] || '';      // F列: 画像
-                    var author = item[6] || '';      // G列: 投稿者名
-                    var status = item[7] || '';      // H列: 掲載許可
-
-                    if (status.trim().toLowerCase() !== 'ng' && location.trim() !== '') {
-                        addMarkerToMap(title, era, description, author, location, imgUrl);
-                    }
-                }
-            }
-        });
-    </script>
-</body>
-</html>
+    <!-- 寄付・支援のご案内ポップアップ（モーダル） -->
+    <div id="donateModal" class="modal-overlay" onclick="closeDonateModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="modal-close" onclick="closeDonateModal()">&times;</span>
+            <h3 class="modal-title">歴史風景マップへのご支援のお願い</h3>
+            <div class="modal-body">
+                <p>いつも「歴史風景マップ」をご利用いただきありがとうございます！</p>
+                <p>本サービスは個人で企画・運営を行っており、

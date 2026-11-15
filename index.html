@@ -16,7 +16,11 @@
     <meta property="og:description" content="江戸時代から令和まで、全国の昔の風景や昭和レトロな街並みを地図上で閲覧・投稿できるオープンマップ。">
     <meta property="og:site_name" content="歴史風景マップ">
 
+    <!-- Leaflet & MarkerCluster（スパイダー展開プラグイン）CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+
     <style>
         * {
             box-sizing: border-box;
@@ -27,6 +31,7 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
         #map {
             width: 100%;
@@ -47,7 +52,7 @@
             opacity: 0.85;
         }
 
-        /* 右上のボタンコンテナ */
+        /* 右上のボタンコンテナ（応援・投稿） */
         .top-btn-container {
             position: absolute;
             top: 15px;
@@ -70,8 +75,6 @@
         .btn-common:active {
             transform: scale(0.98);
         }
-
-        /* 投稿ボタン */
         .post-btn {
             background-color: #1a73e8;
             color: #ffffff;
@@ -79,14 +82,47 @@
         .post-btn:hover {
             background-color: #1557b0;
         }
-
-        /* 寄付・支援ボタン */
         .donate-btn {
             background-color: #ff9800;
             color: #ffffff;
         }
         .donate-btn:hover {
             background-color: #e68a00;
+        }
+
+        /* 年代別フィルターバー（ズームボタンの隣・上部左側に配置） */
+        .era-filter-container {
+            position: absolute;
+            top: 15px;
+            left: 55px;
+            z-index: 1000;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.92);
+            padding: 6px 10px;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+            backdrop-filter: blur(4px);
+        }
+        .era-btn {
+            border: 1px solid #d0d7de;
+            background-color: #ffffff;
+            color: #333333;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .era-btn:hover {
+            background-color: #f0f4f8;
+        }
+        .era-btn.active {
+            background-color: #1a73e8;
+            color: #ffffff;
+            border-color: #1a73e8;
         }
 
         /* モーダル共通スタイル */
@@ -147,8 +183,8 @@
             background-color: #20ba5a;
         }
 
-        /* スマホ向け調整 */
-        @media (max-width: 600px) {
+        /* スマホ向けレイアウト調整（ボタンが重ならないよう配置） */
+        @media (max-width: 768px) {
             .top-btn-container {
                 top: 10px;
                 right: 10px;
@@ -157,6 +193,23 @@
             .btn-common {
                 padding: 8px 12px;
                 font-size: 12px;
+            }
+            .era-filter-container {
+                top: auto;
+                bottom: 24px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 94%;
+                justify-content: center;
+                padding: 6px;
+                gap: 4px;
+            }
+            .era-btn {
+                padding: 6px 9px;
+                font-size: 11px;
+                flex: 1;
+                text-align: center;
+                white-space: nowrap;
             }
         }
     </style>
@@ -170,11 +223,20 @@
             <div class="modal-body" style="text-align: left; margin: 15px 0;">
                 <p>このマップは、日本各地の<strong>江戸時代から令和まで</strong>の街並みや歴史的建造物、思い出の風景を位置情報とともに記録・閲覧できる参加型オープンアーカイブです。</p>
                 <p>🌸 <strong>どんな古い写真でも大歓迎：</strong>「江戸時代・明治の古絵図」から「昭和レトロな街並み」「令和の現在の姿」まで、同じ場所の移り変わりや1点の思い出写真も大歓迎です！</p>
-                <p>📍 <strong>使い方：</strong>ピンをタップすると写真やエピソードが見られます。（スマホでは画像をタップすると拡大できます）<br>
+                <p>📍 <strong>使い方：</strong>ピンをタップすると写真やエピソードが見られます。同じ場所に複数の投稿がある場合は、タップすると放射状に広がります！<br>
+                   🕰️ <strong>年代絞り込み：</strong>年代ボタンで「江戸〜大正」「昭和」「平成・令和」を切り替えて楽しめます。<br>
                    📸 <strong>投稿：</strong>右上の「投稿する」ボタンから、あなたの写真もぜひお寄せください！</p>
             </div>
             <button onclick="closeWelcomeModal()" style="background-color: #1a73e8; color: white; border: none; padding: 12px 24px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 15px;">マップを見る</button>
         </div>
+    </div>
+
+    <!-- 年代別フィルターボタン -->
+    <div class="era-filter-container" id="eraFilterBar">
+        <button class="era-btn active" onclick="filterByEra('all', this)">すべて</button>
+        <button class="era-btn" onclick="filterByEra('edo_taisho', this)">江戸〜大正</button>
+        <button class="era-btn" onclick="filterByEra('showa', this)">昭和</button>
+        <button class="era-btn" onclick="filterByEra('heisei_reiwa', this)">平成・令和</button>
     </div>
 
     <!-- 右上アクションボタンエリア（投稿 & 寄付・支援） -->
@@ -215,14 +277,30 @@
         </div>
     </div>
 
+    <!-- Leaflet & MarkerCluster & PapaParse JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+
     <script>
         var map = L.map('map').setView([36.5, 137.5], 5);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
+
+        // ピンが重なった時に蜘蛛の巣状（スパイダー）に広がるクラスターグループを作成
+        var markersCluster = L.markerClusterGroup({
+            spiderfyOnMaxZoom: true,       // 最大ズームでも同じ場所なら放射状に展開
+            showCoverageOnHover: false,    // ホバー時の青いポリゴン枠を非表示にしてスッキリさせる
+            zoomToBoundsOnClick: true,     // クラスタークリックでズーム（同座標なら即展開）
+            spiderfyDistanceMultiplier: 1.5 // 展開時のピン同士の間隔を少し広げてタップしやすく
+        });
+        map.addLayer(markersCluster);
+
+        // 読み込んだ全マーカーデータを保持する配列（年代フィルター切り替え用）
+        var allMarkerItems = [];
+        var currentFilter = 'all';
 
         // 初回ウェルカムモーダルを閉じる処理
         function closeWelcomeModal() {
@@ -253,6 +331,64 @@
             return url;
         }
 
+        // 入力された年代テキスト（D列）からカテゴリーを自動判定する関数
+        function detectEraCategory(eraText) {
+            if (!eraText) return 'other';
+            var text = eraText.trim();
+
+            // 江戸・幕末・明治・大正の判定（または西暦1600〜1925年）
+            if (/江戸|幕末|明治|大正|16\d{2}|17\d{2}|18\d{2}|190\d|191\d|192[0-5]/.test(text)) {
+                return 'edo_taisho';
+            }
+            // 昭和の判定（または西暦1926〜1988年）
+            if (/昭和|192[6-9]|19[3-7]\d|198[0-8]/.test(text)) {
+                return 'showa';
+            }
+            // 平成・令和の判定（または西暦1989〜2030年）
+            if (/平成|令和|現代|現在|1989|199\d|20[0-2]\d/.test(text)) {
+                return 'heisei_reiwa';
+            }
+            return 'other';
+        }
+
+        // マーカーを作成してリストと地図に登録する関数
+        function registerMarker(lat, lng, popupContent, eraText) {
+            var marker = L.marker([lat, lng]).bindPopup(popupContent);
+            var category = detectEraCategory(eraText);
+
+            allMarkerItems.push({
+                marker: marker,
+                category: category
+            });
+
+            // 現在選択中のフィルターに一致する場合のみ表示
+            if (currentFilter === 'all' || currentFilter === category) {
+                markersCluster.addLayer(marker);
+            }
+        }
+
+        // 年代ボタンクリック時の絞り込み処理
+        function filterByEra(category, btnElement) {
+            currentFilter = category;
+
+            // ボタンのアクティブ表示を切り替え
+            var buttons = document.querySelectorAll('.era-btn');
+            buttons.forEach(function(btn) {
+                btn.classList.remove('active');
+            });
+            if (btnElement) {
+                btnElement.classList.add('active');
+            }
+
+            // クラスター内のピンを一旦クリアして、該当年代のピンのみ再追加
+            markersCluster.clearLayers();
+            allMarkerItems.forEach(function(item) {
+                if (category === 'all' || item.category === category) {
+                    markersCluster.addLayer(item.marker);
+                }
+            });
+        }
+
         function addMarkerToMap(title, era, description, author, locationStr, imgUrl) {
             var popupContent = "<b>" + title + "</b>";
             if (era) popupContent += "<br><small>(" + era + ")</small>";
@@ -273,7 +409,7 @@
                 var lat = parseFloat(parts[0].trim());
                 var lng = parseFloat(parts[1].trim());
                 if (!isNaN(lat) && !isNaN(lng)) {
-                    L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+                    registerMarker(lat, lng, popupContent, era);
                 }
             } else if (locationStr.trim() !== "") {
                 var searchUrl = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(locationStr) + '&accept-language=en,ja';
@@ -284,7 +420,7 @@
                         if (data && data.length > 0) {
                             var lat = parseFloat(data[0].lat);
                             var lng = parseFloat(data[0].lon);
-                            L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
+                            registerMarker(lat, lng, popupContent, era);
                         }
                     })
                     .catch(function(err){ console.error(err); });

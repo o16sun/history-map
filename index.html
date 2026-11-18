@@ -59,18 +59,20 @@
             right: 15px;
             z-index: 1000;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
         }
         .btn-common {
             display: inline-block;
-            padding: 10px 18px;
+            padding: 10px 14px;
             font-weight: bold;
             text-decoration: none;
             border-radius: 8px;
             box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-            font-size: 14px;
+            font-size: 13px;
             transition: transform 0.1s, background-color 0.2s;
+            cursor: pointer;
+            border: none;
         }
         .btn-common:active {
             transform: scale(0.98);
@@ -81,6 +83,13 @@
         }
         .post-btn:hover {
             background-color: #1557b0;
+        }
+        .guide-btn {
+            background-color: #34a853;
+            color: #ffffff;
+        }
+        .guide-btn:hover {
+            background-color: #2e8b45;
         }
         .donate-btn {
             background-color: #ff9800;
@@ -140,7 +149,7 @@
             background: #fff;
             padding: 24px;
             border-radius: 12px;
-            max-width: 440px;
+            max-width: 480px;
             width: 90%;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             text-align: left;
@@ -183,16 +192,47 @@
             background-color: #20ba5a;
         }
 
+        /* 変換ツール専用のスタイル */
+        .converter-box {
+            background: #f8f9fa;
+            border: 1px solid #d0d7de;
+            padding: 14px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .converter-input {
+            width: 100%;
+            padding: 8px 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            margin-top: 6px;
+            margin-bottom: 8px;
+        }
+        .converter-btn {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .converter-btn:hover {
+            background-color: #1557b0;
+        }
+
         /* スマホ向けレイアウト調整 */
         @media (max-width: 768px) {
             .top-btn-container {
                 top: 10px;
                 right: 10px;
-                gap: 6px;
+                gap: 4px;
             }
             .btn-common {
-                padding: 8px 12px;
-                font-size: 12px;
+                padding: 7px 10px;
+                font-size: 11px;
             }
             .era-filter-container {
                 top: auto;
@@ -222,10 +262,9 @@
             <h3 class="modal-title" style="font-size: 20px; color: #1a73e8;">🗺️ 歴史風景マップへようこそ！</h3>
             <div class="modal-body" style="text-align: left; margin: 15px 0;">
                 <p>このマップは、日本各地の<strong>江戸時代から令和まで</strong>の街並みや歴史的建造物、思い出の風景を位置情報とともに記録・閲覧できる参加型オープンアーカイブです。</p>
-                <p>🌸 <strong>どんな古い写真でも大歓迎：</strong>「江戸時代・明治の古絵図」から「昭和レトロな街並み」「令和の現在の姿」まで、同じ場所の移り変わりや1点の思い出写真も大歓迎です！</p>
-                <p>📍 <strong>使い方：</strong>ピンをタップすると写真やエピソードが見られます。<br>
-                   🕰️ <strong>年代絞り込み：</strong>年代ボタンで「江戸〜大正」「昭和」「平成・令和」を切り替えて楽しめます。<br>
-                   📸 <strong>投稿：</strong>右上の「投稿する」ボタンから、あなたの写真もぜひお寄せください！</p>
+                <p>🌸 <strong>どんな古い写真でも大歓迎：</strong>「江戸時代・明治の古絵図」から「昭和レトロな街並み」「令和の現在の姿」まで大歓迎です！</p>
+                <p>📍 <strong>使い方：</strong>ピンをタップすると写真やエピソードが見られます。同じ場所の複数投稿は放射状に広がります。<br>
+                   💡 <strong>投稿のコツ：</strong>住所がうまく反映されない場合は、上の「📖 投稿ガイド・変換」から緯度・経度に一発変換できます！</p>
             </div>
             <button onclick="closeWelcomeModal()" style="background-color: #1a73e8; color: white; border: none; padding: 12px 24px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; font-size: 15px;">マップを見る</button>
         </div>
@@ -241,12 +280,40 @@
 
     <!-- 右上アクションボタンエリア -->
     <div class="top-btn-container">
-        <a href="javascript:void(0)" onclick="openDonateModal()" class="btn-common donate-btn">☕ 運営を応援</a>
+        <button onclick="openGuideModal()" class="btn-common guide-btn">📖 投稿ガイド・変換</button>
         <a href="https://docs.google.com/forms/d/e/1FAIpQLSfDAu2P0MA6PYdFz-dX_sAW-VX24rxKbVaoqwms1dB1iRFxkA/viewform?usp=header" target="_blank" class="btn-common post-btn">投稿する</a>
+        <a href="javascript:void(0)" onclick="openDonateModal()" class="btn-common donate-btn">☕ 応援</a>
     </div>
 
     <!-- 地図表示エリア -->
     <div id="map"></div>
+
+    <!-- 📖 投稿ガイド＆住所変換ツール ポップアップ（モーダル） -->
+    <div id="guideModal" class="modal-overlay" onclick="closeGuideModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="modal-close" onclick="closeGuideModal()">&times;</span>
+            <h3 class="modal-title" style="color: #34a853;">📖 写真の投稿方法と流れ</h3>
+            <div class="modal-body">
+                <ol style="padding-left: 20px; margin-top: 5px; margin-bottom: 15px;">
+                    <li><strong>写真を用意：</strong> 昔の古写真、昭和レトロな街並み、または現在の風景写真を選びます。</li>
+                    <li><strong>場所を調べる（重要）：</strong> 細かい住所だとマップに反映されない場合があります。下の<strong>「住所→緯度経度 変換装置」</strong>を使うと確実です！</li>
+                    <li><strong>フォームから送信：</strong> 右上の「投稿する」ボタンから、タイトル・年代・写真などを入力して送信すれば完了です。</li>
+                </ol>
+
+                <hr style="border:0; border-top:1px solid #eee; margin: 15px 0;">
+
+                <h4 style="margin: 0 0 5px 0; color: #1a73e8; font-size: 15px;">🛠️ 住所 → 緯度・経度 変換装置</h4>
+                <p style="font-size: 13px; margin-bottom: 8px;">写真の場所の住所やスポット名を入力し、ボタンを押すと正確な座標（緯度, 経度）が取得できます。コピーしてフォームの「住所または座標」欄に貼り付けてください。</p>
+                
+                <div class="converter-box">
+                    <label style="font-size: 13px; font-weight: bold;">場所・住所を入力：</label>
+                    <input type="text" id="targetAddress" class="converter-input" placeholder="例: 京都府京都市中京区釜座町 または 宝積寺">
+                    <button onclick="convertAddressToCoord()" class="converter-btn">緯度・経度に変換する</button>
+                    <div id="converterResult" style="margin-top: 10px; font-size: 13px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- 寄付・支援・スポンサーのご案内ポップアップ -->
     <div id="donateModal" class="modal-overlay" onclick="closeDonateModal(event)">
@@ -304,6 +371,46 @@
             document.getElementById('welcomeModal').style.display = 'none';
         }
 
+        // 投稿ガイドモーダルの開閉
+        function openGuideModal() {
+            document.getElementById('guideModal').style.display = 'flex';
+        }
+        function closeGuideModal(event) {
+            if (!event || event.target === document.getElementById('guideModal') || event.target.classList.contains('modal-close')) {
+                document.getElementById('guideModal').style.display = 'none';
+            }
+        }
+
+        // 住所から緯度経度を調べる変換装置の処理
+        function convertAddressToCoord() {
+            var address = document.getElementById('targetAddress').value.trim();
+            var resultDiv = document.getElementById('converterResult');
+            if (!address) {
+                resultDiv.innerHTML = "<span style='color:red;'>住所や場所の名前を入力してください。</span>";
+                return;
+            }
+            resultDiv.innerHTML = "🔍 変換中...";
+
+            var searchUrl = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(address) + '&accept-language=ja';
+            
+            fetch(searchUrl)
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data && data.length > 0) {
+                        var lat = parseFloat(data[0].lat).toFixed(6);
+                        var lon = parseFloat(data[0].lon).toFixed(6);
+                        var coordStr = lat + ", " + lon;
+                        resultDiv.innerHTML = "<b style='color:#34a853;'>✨ 変換成功！以下の座標をコピーしてフォームに貼り付けてください：</b><br>" +
+                            "<input type='text' value='" + coordStr + "' readonly style='width:100%; padding:8px; margin-top:6px; font-weight:bold; background:#e8f0fe; border:1px solid #1a73e8; border-radius:4px; text-align:center;' onclick='this.select()'>";
+                    } else {
+                        resultDiv.innerHTML = "<span style='color:red;'>場所が見つかりませんでした。市町村名や周辺の目立つ建物名を追加して再度お試しください。</span>";
+                    }
+                })
+                .catch(function(err) {
+                    resultDiv.innerHTML = "<span style='color:red;'>通信エラーが発生しました。時間をおいて再度お試しください。</span>";
+                });
+        }
+
         function convertDriveUrl(url) {
             if (!url) return '';
             var fileId = '';
@@ -323,9 +430,8 @@
             return url;
         }
 
-        // 年代判定の強化（西暦2000年代や2010年代、2020年代なども「平成・令和」として自動判定）
         function detectEraCategory(eraText) {
-            if (!eraText) return 'heisei_reiwa'; // 年代未入力の場合はデフォルトで表示対象にする
+            if (!eraText) return 'heisei_reiwa';
             var text = eraText.trim();
 
             if (/江戸|幕末|明治|大正|16\d{2}|17\d{2}|18\d{2}|190\d|191\d|192[0-5]/.test(text)) {
@@ -334,11 +440,10 @@
             if (/昭和|192[6-9]|19[3-7]\d|198[0-8]/.test(text)) {
                 return 'showa';
             }
-            // 平成・令和、および西暦1989年以降（2012年や2016年など）をすべてカバー
             if (/平成|令和|現代|現在|1989|199\d|20[0-3]\d/.test(text)) {
                 return 'heisei_reiwa';
             }
-            return 'heisei_reiwa'; // 判定に迷うものも基本は表示させる
+            return 'heisei_reiwa';
         }
 
         function registerMarker(lat, lng, popupContent, eraText) {
